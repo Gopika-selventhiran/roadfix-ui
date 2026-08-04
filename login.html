@@ -1,0 +1,413 @@
+<!-- login.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ROADFIX - AI Road Intelligence Platform | Government of Tamil Nadu</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="login.css">
+</head>
+<body>
+    <!-- BACKGROUND CANVAS & AMBIENT CITY GLOW -->
+    <div class="bg-viewport">
+        <canvas id="loginHighwayCanvas"></canvas>
+        <div class="bg-overlay"></div>
+        <div class="glow-spot spot-left"></div>
+        <div class="glow-spot spot-center"></div>
+
+        <!-- TAMIL NADU FLOATING WIREFRAME MAP IN BACKGROUND -->
+        <div class="bg-tn-map">
+            <svg viewBox="0 0 400 420" class="tn-wireframe-svg">
+                <path d="M 120 40 C 150 30, 230 40, 260 70 C 290 90, 340 120, 360 160 C 370 190, 350 230, 310 270 C 280 300, 240 360, 200 390 C 170 410, 150 400, 130 360 C 120 330, 100 310, 80 290 C 60 270, 40 230, 45 190 C 50 150, 70 110, 95 75 Z" fill="none" stroke="url(#mapGlowGrad)" stroke-width="1.5" stroke-dasharray="3 3"/>
+                <g class="map-connections" stroke="rgba(0, 240, 255, 0.4)" stroke-width="1">
+                    <line x1="330" y1="100" x2="250" y2="130"/>
+                    <line x1="250" y1="130" x2="190" y2="180"/>
+                    <line x1="330" y1="100" x2="290" y2="180"/>
+                    <line x1="290" y1="180" x2="230" y2="250"/>
+                    <line x1="190" y1="180" x2="120" y2="210"/>
+                    <line x1="230" y1="250" x2="180" y2="300"/>
+                    <line x1="180" y1="300" x2="150" y2="360"/>
+                </g>
+                <g class="map-nodes">
+                    <circle cx="330" cy="100" r="4" fill="#00F0FF"><animate attributeName="r" values="3;6;3" dur="2s" repeatCount="indefinite"/></circle>
+                    <circle cx="250" cy="130" r="3.5" fill="#3B82F6"/>
+                    <circle cx="190" cy="180" r="4" fill="#00F0FF"/>
+                    <circle cx="120" cy="210" r="3.5" fill="#3B82F6"/>
+                    <circle cx="230" cy="250" r="4" fill="#10B981"/>
+                    <circle cx="180" cy="300" r="4" fill="#00F0FF"/>
+                    <circle cx="150" cy="360" r="3.5" fill="#3B82F6"/>
+                </g>
+                <defs>
+                    <linearGradient id="mapGlowGrad" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0%" stop-color="#00F0FF"/>
+                        <stop offset="100%" stop-color="#0066FF"/>
+                    </linearGradient>
+                </defs>
+            </svg>
+        </div>
+    </div>
+
+    <!-- MAIN FULLSCREEN SPLIT CONTAINER -->
+    <div class="app-viewport-wrapper">
+        
+        <!-- LEFT BRANDING & FEATURE PANEL -->
+        <div class="left-panel">
+            <!-- BRAND HEADER -->
+            <div class="brand-block">
+                <div class="brand-logo-row">
+                    <div class="brand-shield-icon">
+                        <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M18 2L4 8V16C4 24.5 10 32 18 34C26 32 32 24.5 32 16V8L18 2Z" fill="url(#brand-shield)" stroke="#00D2FF" stroke-width="1.5"/>
+                            <path d="M12 26L16 10H20L24 26" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M18 10V26" stroke="#00F0FF" stroke-width="1.5" stroke-dasharray="2 3"/>
+                            <circle cx="18" cy="18" r="3" fill="#0066FF" stroke="#00F0FF" stroke-width="1.5"/>
+                            <defs>
+                                <linearGradient id="brand-shield" x1="4" y1="2" x2="32" y2="34" gradientUnits="userSpaceOnUse">
+                                    <stop stop-color="#0F1B38"/>
+                                    <stop offset="1" stop-color="#050B18"/>
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                    </div>
+                    <div class="brand-titles">
+                        <h1 class="brand-main">ROADFIX</h1>
+                        <span class="brand-tag">AI ROAD INTELLIGENCE PLATFORM</span>
+                    </div>
+                </div>
+
+                <!-- GOVERNMENT EMBLEM & DEPARTMENT -->
+                <div class="gov-emblem-block">
+                    <div class="emblem-circle">
+                        <svg viewBox="0 0 40 40" class="emblem-svg">
+                            <circle cx="20" cy="20" r="18" fill="none" stroke="#F59E0B" stroke-width="1.5"/>
+                            <path d="M20 6 L28 14 L20 22 L12 14 Z" fill="#F59E0B" opacity="0.8"/>
+                            <path d="M14 24 H26 V32 H14 Z" fill="#10B981"/>
+                            <circle cx="20" cy="20" r="3" fill="#FFFFFF"/>
+                        </svg>
+                    </div>
+                    <div class="gov-text">
+                        <span class="gov-title">Government of Tamil Nadu</span>
+                        <span class="gov-dept">Highways Department</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- HERO TEXT CONTAINER (DYNAMIC MORPH BETWEEN LOGIN & REGISTER) -->
+            <div class="left-hero-text" id="leftHeroText">
+                <!-- LOGIN STATE HERO -->
+                <div class="hero-state-content active" id="heroLoginState">
+                    <h2 class="hero-heading">
+                        Smarter Roads.<br>
+                        Stronger <span class="blue-text-glow">Tomorrow.</span>
+                    </h2>
+                    <p class="hero-subtext">
+                        AI-powered road monitoring and analytics to build safer highways using intelligent detection, predictive maintenance, automated work assignment and infrastructure monitoring.
+                    </p>
+                </div>
+
+                <!-- REGISTER STATE HERO -->
+                <div class="hero-state-content" id="heroRegisterState">
+                    <h2 class="hero-heading">
+                        Join the <span class="blue-text-glow">ROADFIX</span><br>
+                        Platform
+                    </h2>
+                    <p class="hero-subtext">
+                        Create your account and start building smarter, safer roads with artificial intelligence.
+                    </p>
+                </div>
+            </div>
+
+            <!-- FOUR FEATURE GLASS CARDS -->
+            <div class="feature-cards-row">
+                <div class="feat-card">
+                    <div class="feat-icon-box"><i class="fa-solid fa-brain"></i></div>
+                    <span class="feat-title">AI Detection</span>
+                    <span class="feat-desc">Smart pothole & crack detection</span>
+                </div>
+                <div class="feat-card">
+                    <div class="feat-icon-box"><i class="fa-solid fa-desktop"></i></div>
+                    <span class="feat-title">Live Monitoring</span>
+                    <span class="feat-desc">Real-time monitoring using AI</span>
+                </div>
+                <div class="feat-card">
+                    <div class="feat-icon-box"><i class="fa-solid fa-location-dot"></i></div>
+                    <span class="feat-title">Smart Assignment</span>
+                    <span class="feat-desc">Automatic contractor allocation</span>
+                </div>
+                <div class="feat-card">
+                    <div class="feat-icon-box"><i class="fa-solid fa-chart-line"></i></div>
+                    <span class="feat-title">Data Analytics</span>
+                    <span class="feat-desc">Powerful insights & reporting</span>
+                </div>
+            </div>
+
+            <!-- BOTTOM FOOTNOTE SECURITY BAR -->
+            <div class="left-bottom-bar">
+                <div class="sec-item"><i class="fa-solid fa-shield-halved"></i> Secure</div>
+                <span class="dot">•</span>
+                <div class="sec-item">Reliable</div>
+                <span class="dot">•</span>
+                <div class="sec-item"><i class="fa-solid fa-shield-cat"></i> Government Grade</div>
+                <div class="sec-divider"></div>
+                <div class="sec-item"><i class="fa-solid fa-lock"></i> End-to-end encrypted system</div>
+            </div>
+        </div>
+
+        <!-- RIGHT PANEL: AUTHENTICATION CONTAINER WITH SLIDING CARD STACK -->
+        <div class="right-panel">
+            <div class="auth-card-viewport">
+                
+                <!-- 1. LOGIN CARD PANEL -->
+                <div class="auth-card-panel active" id="loginCardPanel">
+                    <div class="card-header">
+                        <div class="lock-badge">
+                            <i class="fa-solid fa-lock"></i>
+                        </div>
+                        <h2 class="card-title">Welcome Back!</h2>
+                        <p class="card-subtitle">Sign in to access the ROADFIX platform</p>
+                    </div>
+
+                    <!-- SOCIAL LOGIN BUTTONS -->
+                    <div class="social-login-row">
+                        <button class="btn-social btn-google" id="googleLoginBtn">
+                            <svg class="social-icon" viewBox="0 0 24 24">
+                                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                            </svg>
+                            <span>Sign in with Google</span>
+                        </button>
+                        <button class="btn-social btn-microsoft">
+                            <svg class="social-icon" viewBox="0 0 23 23">
+                                <path fill="#f35325" d="M1 1h10v10H1z"/>
+                                <path fill="#81bc06" d="M12 1h10v10H12z"/>
+                                <path fill="#05a6f0" d="M1 12h10v10H1z"/>
+                                <path fill="#ffba08" d="M12 12h10v10H12z"/>
+                            </svg>
+                            <span>Sign in with Microsoft</span>
+                        </button>
+                    </div>
+
+                    <div class="divider-line">
+                        <span>OR</span>
+                    </div>
+
+                    <!-- LOGIN FORM -->
+                    <form id="loginForm" class="auth-form">
+                        <div class="form-group">
+                            <label class="form-label">Employee ID / Email</label>
+                            <div class="input-wrapper">
+                                <input type="text" placeholder="Enter your employee ID or email" required>
+                                <i class="fa-regular fa-envelope input-icon"></i>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Password</label>
+                            <div class="input-wrapper">
+                                <input type="password" id="loginPassword" placeholder="Enter your password" required>
+                                <i class="fa-solid fa-lock input-icon lock-icon"></i>
+                                <button type="button" class="btn-toggle-eye" id="toggleLoginEye">
+                                    <i class="fa-regular fa-eye-slash"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="form-row-between">
+                            <label class="checkbox-container">
+                                <input type="checkbox" checked>
+                                <span class="checkmark"></span>
+                                <span class="cb-label">Remember Me</span>
+                            </label>
+                            <a href="#forgot" class="link-forgot">Forgot Password?</a>
+                        </div>
+
+                        <button type="submit" class="btn-primary-blue">
+                            <span>Sign In</span>
+                            <div class="btn-arrow-circle"><i class="fa-solid fa-arrow-right"></i></div>
+                        </button>
+                    </form>
+
+                    <div class="switch-mode-row">
+                        <span>New to ROADFIX?</span> 
+                        <button type="button" class="btn-switch-trigger" id="gotoRegisterBtn">Create an account</button>
+                    </div>
+
+                    <div class="divider-line role-divider">
+                        <span>Sign in as</span>
+                    </div>
+
+                    <!-- ROLE CARDS -->
+                    <div class="role-cards-grid">
+                        <div class="role-card active" data-role="officer">
+                            <div class="role-icon-box blue"><i class="fa-solid fa-user-tie"></i></div>
+                            <span class="role-title">Government Officer</span>
+                        </div>
+                        <div class="role-card" data-role="contractor">
+                            <div class="role-icon-box green"><i class="fa-solid fa-hard-hat"></i></div>
+                            <span class="role-title">Contractor</span>
+                        </div>
+                        <div class="role-card" data-role="admin">
+                            <div class="role-icon-box purple"><i class="fa-solid fa-user-shield"></i></div>
+                            <span class="role-title">Administrator</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. REGISTER CARD PANEL -->
+                <div class="auth-card-panel" id="registerCardPanel">
+                    <div class="card-header">
+                        <div class="lock-badge blue-user-badge">
+                            <i class="fa-solid fa-user-plus"></i>
+                        </div>
+                        <h2 class="card-title">Create Your Account</h2>
+                        <p class="card-subtitle">Join the ROADFIX AI platform</p>
+                    </div>
+
+                    <!-- SOCIAL SIGNUP -->
+                    <div class="social-login-row">
+                        <button class="btn-social btn-google" id="googleSignupBtn">
+                            <svg class="social-icon" viewBox="0 0 24 24">
+                                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                            </svg>
+                            <span>Sign up with Google</span>
+                        </button>
+                        <button class="btn-social btn-microsoft">
+                            <svg class="social-icon" viewBox="0 0 23 23">
+                                <path fill="#f35325" d="M1 1h10v10H1z"/>
+                                <path fill="#81bc06" d="M12 1h10v10H12z"/>
+                                <path fill="#05a6f0" d="M1 12h10v10H1z"/>
+                                <path fill="#ffba08" d="M12 12h10v10H12z"/>
+                            </svg>
+                            <span>Sign up with Microsoft</span>
+                        </button>
+                    </div>
+
+                    <div class="divider-line">
+                        <span>OR</span>
+                    </div>
+
+                    <!-- REGISTER FORM GRID -->
+                    <form id="registerForm" class="auth-form reg-form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Full Name</label>
+                            <div class="input-wrapper">
+                                <input type="text" placeholder="Enter your full name" required>
+                                <i class="fa-regular fa-user input-icon"></i>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Official Email</label>
+                            <div class="input-wrapper">
+                                <input type="email" placeholder="Enter your official email" required>
+                                <i class="fa-regular fa-envelope input-icon"></i>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Employee ID</label>
+                            <div class="input-wrapper">
+                                <input type="text" placeholder="Enter your employee ID" required>
+                                <i class="fa-solid fa-id-card input-icon"></i>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Department</label>
+                            <div class="input-wrapper select-wrapper">
+                                <select required>
+                                    <option value="" disabled selected>Select your department</option>
+                                    <option value="highways">Highways Department</option>
+                                    <option value="maintenance">Road Maintenance Wing</option>
+                                    <option value="inspection">AI Inspection Unit</option>
+                                    <option value="contractor">Contractor Organization</option>
+                                </select>
+                                <i class="fa-solid fa-landmark input-icon"></i>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Mobile Number</label>
+                            <div class="input-wrapper">
+                                <input type="tel" placeholder="Enter your mobile number" required>
+                                <i class="fa-solid fa-phone input-icon"></i>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Role</label>
+                            <div class="input-wrapper select-wrapper">
+                                <select required>
+                                    <option value="" disabled selected>Select your role</option>
+                                    <option value="officer">Government Officer</option>
+                                    <option value="contractor">Contractor / Field Engineer</option>
+                                    <option value="admin">System Administrator</option>
+                                </select>
+                                <i class="fa-solid fa-user-gear input-icon"></i>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Password</label>
+                            <div class="input-wrapper">
+                                <input type="password" id="regPassword" placeholder="Create a strong password" required>
+                                <i class="fa-solid fa-lock input-icon lock-icon"></i>
+                                <button type="button" class="btn-toggle-eye" id="toggleRegEye">
+                                    <i class="fa-regular fa-eye-slash"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Confirm Password</label>
+                            <div class="input-wrapper">
+                                <input type="password" id="regConfirmPassword" placeholder="Confirm your password" required>
+                                <i class="fa-solid fa-lock input-icon lock-icon"></i>
+                                <button type="button" class="btn-toggle-eye" id="toggleRegConfirmEye">
+                                    <i class="fa-regular fa-eye-slash"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label class="checkbox-container">
+                                <input type="checkbox" required checked>
+                                <span class="checkmark"></span>
+                                <span class="cb-label">I agree to the <a href="#terms" class="link-terms">Terms & Conditions</a> and <a href="#privacy" class="link-terms">Privacy Policy</a></span>
+                            </label>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <button type="submit" class="btn-primary-blue">
+                                <span>Create Account</span>
+                                <div class="btn-arrow-circle"><i class="fa-solid fa-arrow-right"></i></div>
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="switch-mode-row">
+                        <span>Already have an account?</span> 
+                        <button type="button" class="btn-switch-trigger" id="gotoLoginBtn">Sign in</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <script type="module" src="firebase.js"></script>
+<script src="login.js"></script>
+</body>
+</html>
