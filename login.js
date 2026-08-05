@@ -172,10 +172,10 @@ function initFormSubmissions() {
     		const activeRole = document.querySelector(".role-card.active")?.dataset.role;
 
     		if (activeRole === "officer") {
-        		window.location.href = "index.html";
+        		window.location.href = "dashboard.html";
     		}
     		else if (activeRole === "admin") {
-        		window.location.href = "index.html";
+        		window.location.href = "dashboard.html";
     		}
     		else if (activeRole === "contractor") {
         		window.location.href = "user.html";
@@ -274,10 +274,10 @@ async function googleLogin() {
     		const activeRole = document.querySelector(".role-card.active")?.dataset.role;
 
     		if (activeRole === "officer") {
-        		window.location.href = "index.html";
+        		window.location.href = "dashboard.html";
     		}
     		else if (activeRole === "admin") {
-        		window.location.href = "index.html";
+        		window.location.href = "dashboard.html";
     		}
     		else if (activeRole === "contractor") {
         		window.location.href = "user.html";

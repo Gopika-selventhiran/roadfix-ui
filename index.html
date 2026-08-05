@@ -1,2121 +1,663 @@
+<!-- landing.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ROADFIX — Road Health Dashboard</title>
-
-<!-- Fonts -->
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-
-<!-- Leaflet map -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-<style>
-/* ══════════════════════════════════════════
-   RESET & VARIABLES
-══════════════════════════════════════════ */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-:root {
-  --bg:        #F5F6FA;
-  --surface:   #FFFFFF;
-  --border:    #E4E7EF;
-  --border2:   #CDD2E0;
-
-  --text:      #1A1D2E;
-  --text2:     #5A607A;
-  --text3:     #9399B2;
-
-  --red:       #E53535;
-  --red-bg:    #FEF2F2;
-  --red-bd:    #FECACA;
-
-  --amber:     #D97706;
-  --amber-bg:  #FFFBEB;
-  --amber-bd:  #FDE68A;
-
-  --green:     #059669;
-  --green-bg:  #F0FDF4;
-  --green-bd:  #A7F3D0;
-
-  --blue:      #2563EB;
-  --blue-bg:   #EFF6FF;
-  --blue-bd:   #BFDBFE;
-
-  --purple:    #7C3AED;
-  --purple-bg: #F5F3FF;
-
-  --radius:    10px;
-  --shadow:    0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
-  --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
-}
-
-html, body { height: 100%; }
-body {
-  font-family: 'DM Sans', sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  font-size: 14px;
-  line-height: 1.6;
-}
-
-/* ══════════════════════════════════════════
-   LAYOUT
-══════════════════════════════════════════ */
-.shell { display: grid; grid-template-columns: 230px 1fr; min-height: 100vh; }
-
-/* ══════════════════════════════════════════
-   SIDEBAR
-══════════════════════════════════════════ */
-.sidebar {
-  background: var(--surface);
-  border-right: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  position: sticky;
-  top: 0;
-  height: 100vh;
-  overflow-y: auto;
-}
-
-.logo-wrap {
-  padding: 22px 20px 18px;
-  border-bottom: 1px solid var(--border);
-}
-
-.logo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.logo-icon {
-  width: 36px; height: 36px;
-  background: var(--blue);
-  border-radius: 9px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 18px;
-  flex-shrink: 0;
-}
-
-.logo-text { font-size: 18px; font-weight: 600; letter-spacing: -0.3px; }
-.logo-sub  { font-size: 11px; color: var(--text3); margin-top: 1px; }
-
-.nav-group { padding: 16px 12px 8px; }
-
-.nav-label {
-  font-family: 'DM Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  color: var(--text3);
-  padding: 0 8px;
-  margin-bottom: 4px;
-}
-
-.nav-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 9px 10px;
-  border-radius: 8px;
-  cursor: pointer;
-  color: var(--text2);
-  font-size: 13.5px;
-  font-weight: 500;
-  transition: all 0.15s;
-  margin-bottom: 2px;
-  text-decoration: none;
-}
-
-.nav-item:hover { background: var(--bg); color: var(--text); }
-
-.nav-item.active {
-  background: var(--blue-bg);
-  color: var(--blue);
-}
-
-.nav-item svg { flex-shrink: 0; opacity: 0.7; }
-.nav-item.active svg { opacity: 1; }
-
-.nav-pill {
-  margin-left: auto;
-  font-family: 'DM Mono', monospace;
-  font-size: 10px;
-  font-weight: 500;
-  padding: 2px 7px;
-  border-radius: 20px;
-  background: var(--red);
-  color: #fff;
-}
-.nav-pill.amber { background: var(--amber); }
-.nav-pill.green { background: var(--green); }
-.nav-pill.blue  { background: var(--blue);  }
-
-.sidebar-footer {
-  margin-top: auto;
-  padding: 16px 20px;
-  border-top: 1px solid var(--border);
-}
-
-.status-live {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 12px;
-  color: var(--text2);
-}
-
-.live-dot {
-  width: 8px; height: 8px;
-  border-radius: 50%;
-  background: var(--green);
-  animation: blink 2s infinite;
-  flex-shrink: 0;
-}
-
-@keyframes blink {
-  0%,100% { opacity: 1; box-shadow: 0 0 0 0 rgba(5,150,105,0.4); }
-  50% { opacity: 0.8; box-shadow: 0 0 0 5px rgba(5,150,105,0); }
-}
-
-.api-status {
-  font-family: 'DM Mono', monospace;
-  font-size: 10px;
-  color: var(--text3);
-  margin-top: 6px;
-  word-break: break-all;
-}
-
-/* ══════════════════════════════════════════
-   MAIN CONTENT
-══════════════════════════════════════════ */
-.main { overflow-y: auto; }
-
-.page { display: none; padding: 28px 32px; }
-.page.active { display: block; }
-
-/* ══════════════════════════════════════════
-   PAGE HEADER
-══════════════════════════════════════════ */
-.page-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  margin-bottom: 24px;
-}
-
-.page-title { font-size: 22px; font-weight: 600; letter-spacing: -0.4px; }
-.page-sub   { font-size: 13px; color: var(--text3); margin-top: 2px; }
-
-.header-actions { display: flex; gap: 8px; align-items: center; }
-
-/* ══════════════════════════════════════════
-   BUTTONS
-══════════════════════════════════════════ */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 500;
-  font-family: 'DM Sans', sans-serif;
-  cursor: pointer;
-  border: 1px solid transparent;
-  transition: all 0.15s;
-}
-
-.btn-primary { background: var(--blue); color: #fff; border-color: var(--blue); }
-.btn-primary:hover { background: #1d4ed8; }
-
-.btn-secondary { background: var(--surface); color: var(--text); border-color: var(--border); }
-.btn-secondary:hover { background: var(--bg); }
-
-.btn-danger { background: var(--red-bg); color: var(--red); border-color: var(--red-bd); }
-.btn-danger:hover { background: #fee2e2; }
-
-.btn-sm { padding: 5px 10px; font-size: 12px; border-radius: 6px; }
-
-/* ══════════════════════════════════════════
-   CARDS
-══════════════════════════════════════════ */
-.card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-}
-
-.card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--border);
-}
-
-.card-title {
-  font-size: 14px;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.card-body { padding: 20px; }
-
-/* ══════════════════════════════════════════
-   KPI CARDS
-══════════════════════════════════════════ */
-.kpi-grid {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 14px;
-  margin-bottom: 24px;
-}
-
-.kpi {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 18px;
-  box-shadow: var(--shadow);
-  position: relative;
-  transition: box-shadow 0.2s;
-}
-
-.kpi:hover { box-shadow: var(--shadow-md); }
-
-.kpi-label {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--text3);
-  margin-bottom: 8px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.kpi-val {
-  font-family: 'DM Mono', monospace;
-  font-size: 28px;
-  font-weight: 500;
-  line-height: 1;
-  margin-bottom: 6px;
-}
-
-.kpi-sub { font-size: 12px; color: var(--text3); }
-
-.kpi-dot {
-  width: 8px; height: 8px; border-radius: 50%;
-  display: inline-block; margin-right: 4px;
-}
-
-/* ══════════════════════════════════════════
-   TWO COLUMN GRID
-══════════════════════════════════════════ */
-.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
-.grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px; }
-.col-2-1 { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 16px; }
-.mb-16 { margin-bottom: 16px; }
-
-/* ══════════════════════════════════════════
-   ALERT BANNER
-══════════════════════════════════════════ */
-.alert-banner {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 16px;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 500;
-  margin-bottom: 20px;
-}
-
-.alert-banner.red    { background: var(--red-bg);   border: 1px solid var(--red-bd);   color: var(--red); }
-.alert-banner.amber  { background: var(--amber-bg); border: 1px solid var(--amber-bd); color: var(--amber); }
-.alert-banner.green  { background: var(--green-bg); border: 1px solid var(--green-bd); color: var(--green); }
-
-/* ══════════════════════════════════════════
-   TABLE
-══════════════════════════════════════════ */
-.table-wrap { overflow-x: auto; }
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-}
-
-thead th {
-  background: var(--bg);
-  padding: 10px 14px;
-  text-align: left;
-  font-size: 11px;
-  font-weight: 600;
-  font-family: 'DM Mono', monospace;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  color: var(--text3);
-  border-bottom: 1px solid var(--border);
-  white-space: nowrap;
-}
-
-tbody td {
-  padding: 12px 14px;
-  border-bottom: 1px solid var(--border);
-  vertical-align: middle;
-}
-
-tbody tr:last-child td { border-bottom: none; }
-tbody tr:hover td { background: #fafbfc; }
-
-.td-mono {
-  font-family: 'DM Mono', monospace;
-  font-size: 12px;
-}
-
-/* ══════════════════════════════════════════
-   BADGES
-══════════════════════════════════════════ */
-.badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 3px 9px;
-  border-radius: 20px;
-  font-size: 11px;
-  font-weight: 600;
-  font-family: 'DM Mono', monospace;
-  white-space: nowrap;
-}
-
-.badge-red    { background: var(--red-bg);    color: var(--red);    border: 1px solid var(--red-bd); }
-.badge-amber  { background: var(--amber-bg);  color: var(--amber);  border: 1px solid var(--amber-bd); }
-.badge-green  { background: var(--green-bg);  color: var(--green);  border: 1px solid var(--green-bd); }
-.badge-blue   { background: var(--blue-bg);   color: var(--blue);   border: 1px solid var(--blue-bd); }
-.badge-purple { background: var(--purple-bg); color: var(--purple); border: 1px solid #ddd6fe; }
-.badge-gray   { background: var(--bg);        color: var(--text2);  border: 1px solid var(--border); }
-
-/* ══════════════════════════════════════════
-   PROGRESS BAR
-══════════════════════════════════════════ */
-.progress-wrap {
-  height: 6px;
-  background: var(--bg);
-  border-radius: 3px;
-  overflow: hidden;
-}
-
-.progress-bar {
-  height: 100%;
-  border-radius: 3px;
-  transition: width 0.6s ease;
-}
-
-/* ══════════════════════════════════════════
-   MAP
-══════════════════════════════════════════ */
-#live-map {
-  height: 380px;
-  border-radius: 8px;
-  z-index: 1;
-  border: 1px solid var(--border);
-}
-
-/* ══════════════════════════════════════════
-   PIPELINE TRACKER
-══════════════════════════════════════════ */
-.pipeline {
-  display: flex;
-  align-items: flex-start;
-  position: relative;
-  padding: 10px 0;
-}
-
-.pipeline::before {
-  content: '';
-  position: absolute;
-  top: 24px;
-  left: 20px;
-  right: 20px;
-  height: 2px;
-  background: var(--border);
-  z-index: 0;
-}
-
-.pipe-step {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  position: relative;
-  z-index: 1;
-}
-
-.pipe-circle {
-  width: 38px; height: 38px;
-  border-radius: 50%;
-  border: 2px solid var(--border);
-  background: var(--surface);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 15px;
-  transition: all 0.3s;
-}
-
-.pipe-step.done   .pipe-circle { background: var(--green-bg); border-color: var(--green); }
-.pipe-step.active .pipe-circle { background: var(--blue-bg);  border-color: var(--blue);  box-shadow: 0 0 0 4px rgba(37,99,235,0.12); }
-.pipe-step.breach .pipe-circle { background: var(--red-bg);   border-color: var(--red); }
-
-.pipe-label {
-  font-size: 11px;
-  font-weight: 500;
-  text-align: center;
-  color: var(--text3);
-  line-height: 1.3;
-  max-width: 80px;
-}
-
-.pipe-step.done   .pipe-label { color: var(--green); }
-.pipe-step.active .pipe-label { color: var(--blue);  }
-.pipe-step.breach .pipe-label { color: var(--red);   }
-
-/* ══════════════════════════════════════════
-   TIMELINE LOG
-══════════════════════════════════════════ */
-.timeline { display: flex; flex-direction: column; gap: 0; }
-
-.tl-item {
-  display: flex;
-  gap: 14px;
-  position: relative;
-}
-
-.tl-left {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  flex-shrink: 0;
-}
-
-.tl-dot {
-  width: 26px; height: 26px;
-  border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 12px;
-  flex-shrink: 0;
-  border: 2px solid;
-}
-
-.tl-dot.done    { background: var(--green-bg); border-color: var(--green); }
-.tl-dot.active  { background: var(--blue-bg);  border-color: var(--blue); }
-.tl-dot.pending { background: var(--bg);       border-color: var(--border); }
-
-.tl-line {
-  width: 2px;
-  flex: 1;
-  min-height: 20px;
-  background: var(--border);
-  margin: 3px 0;
-}
-
-.tl-dot.done + .tl-line { background: var(--green-bd); }
-
-.tl-content { padding-bottom: 20px; flex: 1; }
-.tl-title { font-size: 13px; font-weight: 600; margin-bottom: 2px; margin-top: 3px; }
-.tl-detail { font-size: 12px; color: var(--text2); }
-.tl-time { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text3); margin-top: 4px; }
-
-/* ══════════════════════════════════════════
-   FORM ELEMENTS
-══════════════════════════════════════════ */
-.form-group { margin-bottom: 14px; }
-.form-label { display: block; font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 6px; }
-.form-input, .form-select {
-  width: 100%;
-  padding: 9px 12px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  font-size: 13px;
-  font-family: 'DM Sans', sans-serif;
-  color: var(--text);
-  background: var(--surface);
-  outline: none;
-  transition: border-color 0.15s;
-}
-.form-input:focus, .form-select:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,0.08); }
-
-/* ══════════════════════════════════════════
-   MODAL
-══════════════════════════════════════════ */
-.modal-overlay {
-  display: none;
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,0.4);
-  z-index: 1000;
-  align-items: center;
-  justify-content: center;
-}
-
-.modal-overlay.open { display: flex; }
-
-.modal {
-  background: var(--surface);
-  border-radius: 14px;
-  width: 500px;
-  max-width: 95vw;
-  max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.15);
-  animation: modalIn 0.2s ease;
-}
-
-@keyframes modalIn {
-  from { opacity: 0; transform: translateY(10px) scale(0.98); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-.modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 18px 22px;
-  border-bottom: 1px solid var(--border);
-}
-
-.modal-title { font-size: 16px; font-weight: 600; }
-.modal-close {
-  width: 28px; height: 28px;
-  border-radius: 6px;
-  border: 1px solid var(--border);
-  background: transparent;
-  cursor: pointer;
-  font-size: 16px;
-  color: var(--text2);
-  display: flex; align-items: center; justify-content: center;
-}
-.modal-close:hover { background: var(--bg); }
-
-.modal-body { padding: 22px; }
-.modal-footer {
-  padding: 14px 22px;
-  border-top: 1px solid var(--border);
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-}
-
-/* ══════════════════════════════════════════
-   TOAST
-══════════════════════════════════════════ */
-.toast-wrap {
-  position: fixed;
-  bottom: 24px; right: 24px;
-  z-index: 9999;
-  display: flex; flex-direction: column; gap: 8px;
-}
-
-.toast {
-  background: var(--text);
-  color: #fff;
-  padding: 12px 16px;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 500;
-  box-shadow: var(--shadow-md);
-  animation: toastIn 0.3s ease;
-  max-width: 280px;
-  display: flex; align-items: center; gap: 8px;
-}
-
-.toast.success { background: var(--green); }
-.toast.error   { background: var(--red); }
-.toast.info    { background: var(--blue); }
-
-@keyframes toastIn {
-  from { opacity: 0; transform: translateX(20px); }
-  to   { opacity: 1; transform: translateX(0); }
-}
-
-/* ══════════════════════════════════════════
-   EMPTY STATE
-══════════════════════════════════════════ */
-.empty {
-  text-align: center;
-  padding: 48px 20px;
-  color: var(--text3);
-}
-
-.empty-icon { font-size: 36px; margin-bottom: 12px; }
-.empty-title { font-size: 15px; font-weight: 600; color: var(--text2); margin-bottom: 6px; }
-.empty-sub { font-size: 13px; }
-
-/* ══════════════════════════════════════════
-   LOADING SPINNER
-══════════════════════════════════════════ */
-.spinner {
-  width: 18px; height: 18px;
-  border: 2px solid var(--border);
-  border-top-color: var(--blue);
-  border-radius: 50%;
-  animation: spin 0.7s linear infinite;
-  display: inline-block;
-}
-
-@keyframes spin { to { transform: rotate(360deg); } }
-
-/* RHI bar */
-.rhi-wrap { display: flex; align-items: center; gap: 8px; }
-.rhi-num { font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 500; width: 28px; }
-.rhi-track { flex: 1; height: 5px; background: var(--bg); border-radius: 3px; overflow: hidden; }
-.rhi-fill  { height: 100%; border-radius: 3px; }
-
-/* ══════════════════════════════════════════
-   SETTINGS PAGE
-══════════════════════════════════════════ */
-.settings-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 0;
-  border-bottom: 1px solid var(--border);
-}
-.settings-row:last-child { border-bottom: none; }
-.settings-key { font-size: 13px; font-weight: 500; }
-.settings-desc { font-size: 12px; color: var(--text3); margin-top: 2px; }
-.settings-val { font-family: 'DM Mono', monospace; font-size: 13px; color: var(--blue); }
-
-/* ══════════════════════════════════════════
-   RESPONSIVE
-══════════════════════════════════════════ */
-@media (max-width: 900px) {
-  .shell { grid-template-columns: 1fr; }
-  .sidebar { display: none; }
-  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
-  .col-2-1 { grid-template-columns: 1fr; }
-  .grid2   { grid-template-columns: 1fr; }
-  .grid3   { grid-template-columns: 1fr; }
-}
-/* ══════════════════════════════════════════
-   AI COPILOT STYLES
-══════════════════════════════════════════ */
-.copilot-btn {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  z-index: 1001;
-  background: var(--text);
-  color: #fff;
-  border: none;
-  padding: 12px 20px;
-  border-radius: 30px;
-  font-weight: 600;
-  box-shadow: var(--shadow-md);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: transform 0.2s;
-}
-.copilot-btn:hover { transform: translateY(-2px); background: #2d324a; }
-
-.copilot-panel {
-  position: fixed;
-  bottom: 84px;
-  right: 24px;
-  width: 380px;
-  height: 500px;
-  max-height: 70vh;
-  background: var(--surface);
-  border-radius: 14px;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.15);
-  border: 1px solid var(--border);
-  display: none;
-  flex-direction: column;
-  z-index: 1001;
-  overflow: hidden;
-  animation: modalIn 0.2s ease;
-}
-.copilot-panel.open { display: flex; }
-
-.copilot-header {
-  padding: 14px 18px;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.copilot-body {
-  flex: 1;
-  padding: 16px;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  background: #fafbfc;
-}
-
-.copilot-msg {
-  max-width: 85%;
-  padding: 10px 14px;
-  border-radius: 12px;
-  font-size: 13px;
-  line-height: 1.5;
-}
-.copilot-msg.ai {
-  align-self: flex-start;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--text);
-}
-.copilot-msg.user {
-  align-self: flex-end;
-  background: var(--blue);
-  color: #fff;
-}
-
-.copilot-loader {
-  padding: 8px 16px;
-  font-size: 12px;
-  color: var(--text3);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.copilot-footer {
-  padding: 14px;
-  border-top: 1px solid var(--border);
-  background: var(--surface);
-}
-
-.copilot-input-wrap {
-  display: flex;
-  gap: 8px;
-}
-
-#copilot-input {
-  flex: 1;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 8px 12px;
-  font-size: 13px;
-  outline: none;
-}
-
-.copilot-table-result {
-  margin-top: 8px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: #fff;
-  overflow: hidden;
-}
-
-@media (max-width: 450px) {
-  .copilot-panel {
-    width: calc(100vw - 48px);
-    height: 450px;
-  }
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ROADFIX - AI Road Health Monitoring System | Government of Tamil Nadu</title>
+    <meta name="description" content="AI Powered. Data Driven. Roads of Tomorrow. Advanced AI road health monitoring system for Government of Tamil Nadu Highways Department.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="landing.css">
 </head>
 <body>
-
-<!-- ═══════════════════════════════════════
-     TOAST CONTAINER
-═══════════════════════════════════════ -->
-<div class="toast-wrap" id="toasts"></div>
-
-<!-- ═══════════════════════════════════════
-     MODAL — ASSIGN CONTRACTOR
-═══════════════════════════════════════ -->
-<div class="modal-overlay" id="modal-assign">
-  <div class="modal">
-    <div class="modal-header">
-      <div class="modal-title">Assign Contractor</div>
-      <button class="modal-close" onclick="closeModal('modal-assign')">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="form-group">
-        <label class="form-label">Pothole ID</label>
-        <input class="form-input" id="assign-ph-id" readonly style="background:var(--bg)">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Contractor Name</label>
-        <input class="form-input" id="assign-name" placeholder="e.g. M/s Senthil Road Works">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Contractor Phone</label>
-        <input class="form-input" id="assign-phone" placeholder="+91 98421 XXXXX">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Note (optional)</label>
-        <input class="form-input" id="assign-note" placeholder="Additional instructions">
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeModal('modal-assign')">Cancel</button>
-      <button class="btn btn-primary" onclick="submitAssign()">✓ Assign &amp; Send Alert</button>
-    </div>
-  </div>
-</div>
-
-<!-- ═══════════════════════════════════════
-     MODAL — POTHOLE DETAIL
-═══════════════════════════════════════ -->
-<div class="modal-overlay" id="modal-detail">
-  <div class="modal" style="width:560px">
-    <div class="modal-header">
-      <div class="modal-title" id="detail-title">Pothole Details</div>
-      <button class="modal-close" onclick="closeModal('modal-detail')">✕</button>
-    </div>
-    <div class="modal-body" id="detail-body">
-      <div class="empty"><div class="spinner"></div></div>
-    </div>
-  </div>
-</div>
-
-<!-- ═══════════════════════════════════════
-     SHELL
-═══════════════════════════════════════ -->
-<div class="shell">
-
-<!-- SIDEBAR -->
-<aside class="sidebar">
-  <div class="logo-wrap">
-    <div class="logo">
-      <div class="logo-icon">🛣️</div>
-      <div>
-        <div class="logo-text">ROADFIX</div>
-        <div class="logo-sub">Tamil Nadu · Road Intelligence</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="nav-group">
-    <div class="nav-label">Monitor</div>
-    <div class="nav-item active" onclick="navigate('dashboard')">
-      <svg width="16" height="16" fill="none" viewBox="0 0 16 16"><rect x="1" y="1" width="6" height="6" rx="1.5" fill="currentColor" opacity=".8"/><rect x="9" y="1" width="6" height="6" rx="1.5" fill="currentColor" opacity=".5"/><rect x="1" y="9" width="6" height="6" rx="1.5" fill="currentColor" opacity=".5"/><rect x="9" y="9" width="6" height="6" rx="1.5" fill="currentColor" opacity=".3"/></svg>
-      Dashboard
-    </div>
-    <div class="nav-item" onclick="navigate('map')">
-      <svg width="16" height="16" fill="none" viewBox="0 0 16 16"><circle cx="8" cy="7" r="3" stroke="currentColor" stroke-width="1.5"/><path d="M8 2C5.24 2 3 4.24 3 7c0 4 5 9 5 9s5-5 5-9c0-2.76-2.24-5-5-5z" stroke="currentColor" stroke-width="1.5"/></svg>
-      Live Map
-      <span class="nav-pill blue" id="nav-map-count">—</span>
-    </div>
-  </div>
-
-  <div class="nav-group">
-    <div class="nav-label">Manage</div>
-    <div class="nav-item" onclick="navigate('potholes')">
-      <svg width="16" height="16" fill="none" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M5 8c0-1.66 1.34-3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-      Pothole Log
-      <span class="nav-pill" id="nav-ph-count">—</span>
-    </div>
-    <div class="nav-item" onclick="navigate('pipeline')">
-      <svg width="16" height="16" fill="none" viewBox="0 0 16 16"><path d="M2 4h12M2 8h8M2 12h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-      Repair Pipeline
-      <span class="nav-pill amber" id="nav-pipe-count">—</span>
-    </div>
-    <div class="nav-item" onclick="navigate('history')">
-      <svg width="16" height="16" fill="none" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3l2 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-      Scan History
-    </div>
-  </div>
-
-  <div class="nav-group">
-    <div class="nav-label">Admin</div>
-    <div class="nav-item" onclick="navigate('demo')">
-      <svg width="16" height="16" fill="none" viewBox="0 0 16 16"><path d="M8 1v14M1 8h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-      Demo Controls
-    </div>
-    <div class="nav-item" onclick="navigate('settings')">
-      <svg width="16" height="16" fill="none" viewBox="0 0 16 16"><circle cx="8" cy="8" r="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M3.05 12.95l1.41-1.41M11.54 4.46l1.41-1.41" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-      Settings
-    </div>
-  </div>
-
-  <div class="sidebar-footer">
-    <div class="status-live">
-      <div class="live-dot"></div>
-      <span>System Online</span>
-    </div>
-    <div class="api-status" id="api-url-display">Connecting...</div>
-  </div>
-</aside>
-
-<!-- ═══════════════════════════════════════
-     MAIN
-═══════════════════════════════════════ -->
-<main class="main">
-
-<!-- ════════════ PAGE: DASHBOARD ════════════ -->
-<div class="page active" id="page-dashboard">
-  <div class="page-header">
-    <div>
-      <div class="page-title">Dashboard</div>
-      <div class="page-sub">Live overview of all road health activity</div>
-    </div>
-    <div class="header-actions">
-      <div id="last-refresh" style="font-size:12px;color:var(--text3);font-family:'DM Mono',monospace"></div>
-      <button class="btn btn-secondary btn-sm" onclick="loadAll()">↻ Refresh</button>
-    </div>
-  </div>
-
-  <!-- Alert banner shown only when SLA breaches exist -->
-  <div class="alert-banner red" id="sla-alert" style="display:none">
-    ⚠️ <strong id="sla-count">0</strong> potholes have breached their SLA deadline — immediate action required.
-  </div>
-
-  <!-- KPIs -->
-  <div class="kpi-grid">
-    <div class="kpi">
-      <div class="kpi-label"><span class="kpi-dot" style="background:var(--red)"></span>Critical</div>
-      <div class="kpi-val" id="kpi-critical" style="color:var(--red)">—</div>
-      <div class="kpi-sub">Need repair &lt;6 hrs</div>
-    </div>
-    <div class="kpi">
-      <div class="kpi-label"><span class="kpi-dot" style="background:var(--amber)"></span>Work Orders</div>
-      <div class="kpi-val" id="kpi-wo" style="color:var(--amber)">—</div>
-      <div class="kpi-sub">Auto-generated</div>
-    </div>
-    <div class="kpi">
-      <div class="kpi-label"><span class="kpi-dot" style="background:var(--blue)"></span>In Progress</div>
-      <div class="kpi-val" id="kpi-inprog" style="color:var(--blue)">—</div>
-      <div class="kpi-sub">Being repaired</div>
-    </div>
-    <div class="kpi">
-      <div class="kpi-label"><span class="kpi-dot" style="background:var(--green)"></span>Resolved</div>
-      <div class="kpi-val" id="kpi-resolved" style="color:var(--green)">—</div>
-      <div class="kpi-sub">Sensor verified</div>
-    </div>
-    <div class="kpi">
-      <div class="kpi-label">City RHI Score</div>
-      <div class="kpi-val" id="kpi-rhi">—</div>
-      <div class="kpi-sub" id="kpi-rhi-label">Road health index</div>
-    </div>
-  </div>
-
-  <!-- Map + Feed -->
-  <div class="col-2-1">
-    <div class="card">
-      <div class="card-header">
-        <div class="card-title">🗺️ Live Map</div>
-        <span class="badge badge-blue" id="map-count-badge">Loading...</span>
-      </div>
-      <div class="card-body" style="padding:12px">
-        <div id="live-map"></div>
-      </div>
+    <!-- BACKGROUND CANVAS & GLOW EFFECTS -->
+    <div class="bg-effects">
+        <canvas id="highwayCanvas"></canvas>
+        <div class="glow-orb glow-1"></div>
+        <div class="glow-orb glow-2"></div>
+        <div class="glow-orb glow-3"></div>
+        <div class="grid-overlay"></div>
     </div>
 
-    <div class="card">
-      <div class="card-header">
-        <div class="card-title">🔔 Recent Activity</div>
-      </div>
-      <div id="activity-feed" style="padding:4px 0;max-height:430px;overflow-y:auto">
-        <div class="empty"><div class="spinner"></div></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Recent potholes table -->
-  <div class="card mb-16">
-    <div class="card-header">
-      <div class="card-title">⚠️ Active Potholes (Top 5)</div>
-      <button class="btn btn-secondary btn-sm" onclick="navigate('potholes')">View all →</button>
-    </div>
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>ID</th><th>Location</th><th>Severity</th>
-            <th>RHI</th><th>Damage</th><th>Status</th><th>Action</th>
-          </tr>
-        </thead>
-        <tbody id="dash-table">
-          <tr><td colspan="7" style="text-align:center;padding:24px"><div class="spinner"></div></td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-</div><!-- /dashboard -->
-
-
-<!-- ════════════ PAGE: MAP ════════════ -->
-<div class="page" id="page-map">
-  <div class="page-header">
-    <div>
-      <div class="page-title">Live Map</div>
-      <div class="page-sub">Real-time pothole locations across the city</div>
-    </div>
-    <div class="header-actions">
-      <button class="btn btn-secondary btn-sm" onclick="loadMapData()">↻ Refresh</button>
-    </div>
-  </div>
-
-  <div class="card mb-16">
-    <div class="card-body" style="padding:12px">
-      <div id="full-map" style="height:500px;border-radius:8px;border:1px solid var(--border)"></div>
-    </div>
-  </div>
-
-  <div class="grid3">
-    <div class="alert-banner red" style="margin:0">
-      <strong>🔴 High</strong>&nbsp; RHI &lt; 25 — Immediate repair needed
-    </div>
-    <div class="alert-banner amber" style="margin:0">
-      <strong>🟡 Medium</strong>&nbsp; RHI 25–55 — Schedule repair
-    </div>
-    <div class="alert-banner green" style="margin:0">
-      <strong>🟢 Low</strong>&nbsp; RHI &gt; 55 — Monitor only
-    </div>
-  </div>
-</div>
-
-
-<!-- ════════════ PAGE: POTHOLES ════════════ -->
-<div class="page" id="page-potholes">
-  <div class="page-header">
-    <div>
-      <div class="page-title">Pothole Log</div>
-      <div class="page-sub">All detected potholes with status and actions</div>
-    </div>
-    <div class="header-actions">
-      <select class="form-select" style="width:140px;padding:7px 10px" id="filter-status" onchange="loadPotholes()">
-        <option value="">All Status</option>
-        <option value="DETECTED">Detected</option>
-        <option value="WORK_ORDER">Work Order</option>
-        <option value="IN_PROGRESS">In Progress</option>
-        <option value="REPAIR_CLAIMED">Repair Claimed</option>
-        <option value="RESOLVED">Resolved</option>
-      </select>
-      <select class="form-select" style="width:130px;padding:7px 10px" id="filter-severity" onchange="loadPotholes()">
-        <option value="">All Severity</option>
-        <option value="HIGH">High</option>
-        <option value="MEDIUM">Medium</option>
-        <option value="LOW">Low</option>
-      </select>
-      <button class="btn btn-secondary btn-sm" onclick="loadPotholes()">↻ Refresh</button>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>ID</th><th>Location</th><th>Severity</th><th>RHI</th>
-            <th>Damage%</th><th>Confidence</th><th>Detections</th>
-            <th>Status</th><th>Detected</th><th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="ph-table-body">
-          <tr><td colspan="10" style="text-align:center;padding:32px"><div class="spinner"></div></td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-</div>
-
-
-<!-- ════════════ PAGE: PIPELINE ════════════ -->
-<div class="page" id="page-pipeline">
-  <div class="page-header">
-    <div>
-      <div class="page-title">Repair Pipeline</div>
-      <div class="page-sub">Track each pothole from detection to verified repair</div>
-    </div>
-    <div class="header-actions">
-      <button class="btn btn-secondary btn-sm" onclick="loadPipeline()">↻ Refresh</button>
-    </div>
-  </div>
-
-  <div id="pipeline-list">
-    <div class="empty"><div class="spinner"></div></div>
-  </div>
-</div>
-
-
-<!-- ════════════ PAGE: HISTORY ════════════ -->
-<div class="page" id="page-history">
-  <div class="page-header">
-    <div>
-      <div class="page-title">Scan History</div>
-      <div class="page-sub">Raw sensor events from all vehicles</div>
-    </div>
-    <div class="header-actions">
-      <button class="btn btn-secondary btn-sm" onclick="loadHistory()">↻ Refresh</button>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr><th>Time</th><th>Vehicle</th><th>Latitude</th><th>Longitude</th><th>Accel (G)</th><th>Speed</th><th>Flagged</th></tr>
-        </thead>
-        <tbody id="history-body">
-          <tr><td colspan="7" style="text-align:center;padding:32px"><div class="spinner"></div></td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-</div>
-
-
-<!-- ════════════ PAGE: DEMO ════════════ -->
-<div class="page" id="page-demo">
-  <div class="page-header">
-    <div>
-      <div class="page-title">Demo Controls</div>
-      <div class="page-sub">Load sample data and simulate vehicle drives for presentation</div>
-    </div>
-  </div>
-
-  <div class="alert-banner amber">
-    ⚠️ These controls are for contest demonstration only. Use them to populate the database before your presentation.
-  </div>
-
-  <div class="grid2">
-    <div class="card">
-      <div class="card-header"><div class="card-title">🌱 Seed Demo Data</div></div>
-      <div class="card-body">
-        <p style="font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.7">
-          Loads 10 real Coimbatore pothole locations with different severity levels and pipeline stages. 
-          Clears existing data first. Use this to set up before your presentation.
-        </p>
-        <button class="btn btn-primary" onclick="seedDemo()">🌱 Load Demo Data</button>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-header"><div class="card-title">🚗 Simulate Drive</div></div>
-      <div class="card-body">
-        <p style="font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.7">
-          Simulates a vehicle driving and hitting potholes. Run this 3 times to trigger cluster 
-          confirmation and watch a work order auto-generate in real time.
-        </p>
-        <div class="form-group">
-          <label class="form-label">Vehicle ID</label>
-          <input class="form-input" id="sim-vehicle" value="TN-33-DEMO">
-        </div>
-        <button class="btn btn-primary" onclick="simulateDrive()">🚗 Run Simulation</button>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-header"><div class="card-title">📡 Manual Sensor Submit</div></div>
-      <div class="card-body">
-        <p style="font-size:13px;color:var(--text2);margin-bottom:12px">Send a custom sensor reading to the API manually.</p>
-        <div class="grid2" style="gap:8px;margin-bottom:8px">
-          <div class="form-group" style="margin:0">
-            <label class="form-label">Vehicle ID</label>
-            <input class="form-input" id="manual-vid" value="TN-33-TEST">
-          </div>
-          <div class="form-group" style="margin:0">
-            <label class="form-label">Speed (kmph)</label>
-            <input class="form-input" id="manual-speed" value="30" type="number">
-          </div>
-          <div class="form-group" style="margin:0">
-            <label class="form-label">Latitude</label>
-            <input class="form-input" id="manual-lat" value="11.0168" type="number" step="0.0001">
-          </div>
-          <div class="form-group" style="margin:0">
-            <label class="form-label">Longitude</label>
-            <input class="form-input" id="manual-lon" value="76.9558" type="number" step="0.0001">
-          </div>
-          <div class="form-group" style="margin:0">
-            <label class="form-label">Accel Z (G) — spike = pothole</label>
-            <input class="form-input" id="manual-az" value="3.5" type="number" step="0.1">
-          </div>
-        </div>
-        <button class="btn btn-primary" onclick="manualSensor()">📡 Submit Reading</button>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-header"><div class="card-title">📊 Demo Result</div></div>
-      <div class="card-body">
-        <pre id="demo-result" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text2);background:var(--bg);padding:12px;border-radius:6px;overflow-x:auto;min-height:80px;white-space:pre-wrap">
-Results will appear here after running a demo action...
-        </pre>
-      </div>
-    </div>
-  </div>
-</div>
-
-
-<!-- ════════════ PAGE: SETTINGS ════════════ -->
-<div class="page" id="page-settings">
-  <div class="page-header">
-    <div>
-      <div class="page-title">Settings</div>
-      <div class="page-sub">Configure API connection and detection thresholds</div>
-    </div>
-  </div>
-
-  <div class="grid2">
-    <div class="card">
-      <div class="card-header"><div class="card-title">🔌 API Connection</div></div>
-      <div class="card-body">
-        <div class="form-group">
-          <label class="form-label">Backend API URL</label>
-          <input class="form-input" id="settings-api-url" placeholder="https://roadfix-backend-n77x.onrender.com/docs">
-        </div>
-        <div style="display:flex;gap:8px">
-          <button class="btn btn-primary" onclick="saveApiUrl()">Save & Test Connection</button>
-          <button class="btn btn-secondary" onclick="testConnection()">Test Only</button>
-        </div>
-        <div id="conn-status" style="margin-top:10px;font-size:12px"></div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-header"><div class="card-title">🎛️ Detection Thresholds</div></div>
-      <div class="card-body">
-        <div class="settings-row">
-          <div>
-            <div class="settings-key">Pothole Threshold</div>
-            <div class="settings-desc">G-force spike above this = pothole candidate</div>
-          </div>
-          <div class="settings-val">2.0 G</div>
-        </div>
-        <div class="settings-row">
-          <div>
-            <div class="settings-key">Cluster Radius</div>
-            <div class="settings-desc">GPS points within this = same pothole</div>
-          </div>
-          <div class="settings-val">15 m</div>
-        </div>
-        <div class="settings-row">
-          <div>
-            <div class="settings-key">Confirm Count</div>
-            <div class="settings-desc">Detections needed to auto-confirm</div>
-          </div>
-          <div class="settings-val">3 hits</div>
-        </div>
-        <div class="settings-row">
-          <div>
-            <div class="settings-key">Min Speed</div>
-            <div class="settings-desc">Below this speed, spikes are ignored</div>
-          </div>
-          <div class="settings-val">5 kmph</div>
-        </div>
-        <p style="font-size:11px;color:var(--text3);margin-top:10px">Thresholds are set in the backend <code>main.py</code> file.</p>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-header"><div class="card-title">⏱️ SLA Deadlines</div></div>
-      <div class="card-body">
-        <div class="settings-row">
-          <div><div class="settings-key">HIGH severity</div></div>
-          <div><span class="badge badge-red">6 hours</span></div>
-        </div>
-        <div class="settings-row">
-          <div><div class="settings-key">MEDIUM severity</div></div>
-          <div><span class="badge badge-amber">48 hours</span></div>
-        </div>
-        <div class="settings-row">
-          <div><div class="settings-key">LOW severity</div></div>
-          <div><span class="badge badge-green">7 days</span></div>
-        </div>
-        <div class="settings-row">
-          <div><div class="settings-key">DLP Warranty Period</div></div>
-          <div><span class="badge badge-blue">12 months</span></div>
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-header"><div class="card-title">ℹ️ About ROADFIX</div></div>
-      <div class="card-body">
-        <div class="settings-row">
-          <div class="settings-key">System</div>
-          <div class="settings-val">ROADFIX v1.0</div>
-        </div>
-        <div class="settings-row">
-          <div class="settings-key">Built for</div>
-          <div class="settings-val">Niral Thiruvizha 2024</div>
-        </div>
-        <div class="settings-row">
-          <div class="settings-key">Backend</div>
-          <div class="settings-val">Python + FastAPI</div>
-        </div>
-        <div class="settings-row">
-          <div class="settings-key">Database</div>
-          <div class="settings-val">SQLite / PostgreSQL</div>
-        </div>
-        <div class="settings-row">
-          <div class="settings-key">Maps</div>
-          <div class="settings-val">Leaflet + OpenStreetMap</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-</main><!-- /main -->
-</div><!-- /shell -->
-
-<!-- ═══════════════════════════════════════
-     JAVASCRIPT
-═══════════════════════════════════════ -->
-<script>
-/* ─────────────────────────────────────
-   CONFIG
-───────────────────────────────────── */
-let API = 'http://127.0.0.1:8000'
-let leafletMap = null;
-let fullLeafletMap = null;
-let mapMarkers = [];
-
-document.getElementById('settings-api-url').value = API;
-document.getElementById('api-url-display').textContent = API;
-
-/* ─────────────────────────────────────
-   NAVIGATION
-───────────────────────────────────── */
-function navigate(page) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.getElementById('page-' + page).classList.add('active');
-  event.currentTarget && event.currentTarget.classList.add('active');
-
-  // Load data for the page
-  if (page === 'dashboard') loadAll();
-  if (page === 'map')       loadMapData();
-  if (page === 'potholes')  loadPotholes();
-  if (page === 'pipeline')  loadPipeline();
-  if (page === 'history')   loadHistory();
-
-  // Fix: re-click the correct nav item
-  document.querySelectorAll('.nav-item').forEach(n => {
-    if (n.getAttribute('onclick') && n.getAttribute('onclick').includes("'" + page + "'")) {
-      n.classList.add('active');
-    }
-  });
-}
-
-/* ─────────────────────────────────────
-   API CALLS
-───────────────────────────────────── */
-async function apiFetch(path, options = {}) {
-  try {
-    const res = await fetch(API + path, {
-      headers: { 'Content-Type': 'application/json' },
-      ...options
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({ detail: res.statusText }));
-      throw new Error(err.detail || res.statusText);
-    }
-    return await res.json();
-  } catch (e) {
-    if (e.message.includes('fetch') || e.message.includes('Failed')) {
-      showToast('Cannot reach backend. Check API URL in Settings.', 'error');
-    } else {
-      showToast(e.message, 'error');
-    }
-    throw e;
-  }
-}
-
-/* ─────────────────────────────────────
-   TOASTS
-───────────────────────────────────── */
-function showToast(msg, type = 'info') {
-  const wrap = document.getElementById('toasts');
-  const t = document.createElement('div');
-  t.className = `toast ${type}`;
-  const icons = { success: '✓', error: '✕', info: 'ℹ' };
-  t.innerHTML = `<span>${icons[type] || 'ℹ'}</span> ${msg}`;
-  wrap.appendChild(t);
-  setTimeout(() => t.remove(), 3500);
-}
-
-/* ─────────────────────────────────────
-   MODALS
-───────────────────────────────────── */
-function closeModal(id) {
-  document.getElementById(id).classList.remove('open');
-}
-
-document.querySelectorAll('.modal-overlay').forEach(m => {
-  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
-});
-
-/* ─────────────────────────────────────
-   HELPERS
-───────────────────────────────────── */
-function severityBadge(s) {
-  const map = { HIGH: 'red', MEDIUM: 'amber', LOW: 'green' };
-  return `<span class="badge badge-${map[s] || 'gray'}">${s}</span>`;
-}
-
-function statusBadge(s) {
-  const map = {
-    DETECTED:       ['gray',   '🔍 Detected'],
-    WORK_ORDER:     ['amber',  '📋 Work Order'],
-    IN_PROGRESS:    ['blue',   '🔧 In Progress'],
-    REPAIR_CLAIMED: ['purple', '✋ Repair Claimed'],
-    RESOLVED:       ['green',  '✅ Resolved'],
-    WARRANTY_CLAIM: ['red',    '⚠️ Warranty'],
-  };
-  const [cls, label] = map[s] || ['gray', s];
-  return `<span class="badge badge-${cls}">${label}</span>`;
-}
-
-function rhiBar(score) {
-  const color = score < 25 ? 'var(--red)' : score < 55 ? 'var(--amber)' : 'var(--green)';
-  return `<div class="rhi-wrap">
-    <span class="rhi-num" style="color:${color}">${score}</span>
-    <div class="rhi-track"><div class="rhi-fill" style="width:${score}%;background:${color}"></div></div>
-  </div>`;
-}
-
-function timeAgo(iso) {
-  if (!iso) return '—';
-  const diff = (Date.now() - new Date(iso)) / 1000;
-  if (diff < 60)   return Math.round(diff) + 's ago';
-  if (diff < 3600) return Math.round(diff/60) + 'm ago';
-  if (diff < 86400)return Math.round(diff/3600) + 'h ago';
-  return Math.round(diff/86400) + 'd ago';
-}
-
-function fmtTime(iso) {
-  if (!iso) return '—';
-  return new Date(iso).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' });
-}
-
-/* ─────────────────────────────────────
-   MAP SETUP
-───────────────────────────────────── */
-function initMap(containerId) {
-  const map = L.map(containerId, { zoomControl: true }).setView([11.0168, 76.9558], 13);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap contributors',
-    maxZoom: 19
-  }).addTo(map);
-  return map;
-}
-
-function markerColor(severity, status) {
-  if (status === 'RESOLVED') return '#059669';
-  if (severity === 'HIGH')   return '#E53535';
-  if (severity === 'MEDIUM') return '#D97706';
-  return '#059669';
-}
-
-function addMarkersToMap(map, markers) {
-  // Clear old
-  map.eachLayer(l => { if (l instanceof L.CircleMarker || l instanceof L.Marker) map.removeLayer(l); });
-
-  markers.forEach(m => {
-    const color = markerColor(m.severity, m.status);
-    const radius = m.severity === 'HIGH' ? 10 : m.severity === 'MEDIUM' ? 7 : 5;
-
-    L.circleMarker([m.latitude, m.longitude], {
-      radius, fillColor: color, color: '#fff',
-      weight: 2, opacity: 1, fillOpacity: 0.85
-    })
-    .bindPopup(`
-      <div style="font-family:'DM Sans',sans-serif;min-width:180px">
-        <div style="font-weight:600;margin-bottom:4px">${m.id}</div>
-        <div style="font-size:12px;color:#5A607A;margin-bottom:8px">${m.location_name || 'Unknown location'}</div>
-        <div style="font-size:12px"><b>Severity:</b> ${m.severity}</div>
-        <div style="font-size:12px"><b>RHI Score:</b> ${m.rhi_score}/100</div>
-        <div style="font-size:12px"><b>Status:</b> ${m.status}</div>
-        <div style="font-size:12px"><b>Detected:</b> ${timeAgo(m.detected_at)}</div>
-        ${m.sla_breached ? '<div style="color:#E53535;font-size:12px;margin-top:4px">⚠️ SLA Breached</div>' : ''}
-      </div>
-    `)
-    .addTo(map);
-  });
-}
-
-/* ─────────────────────────────────────
-   LOAD: DASHBOARD
-───────────────────────────────────── */
-async function loadAll() {
-  loadSummary();
-  loadDashTable();
-  loadMapData();
-  loadActivityFeed();
-  document.getElementById('last-refresh').textContent =
-    'Refreshed ' + new Date().toLocaleTimeString('en-IN');
-}
-
-async function loadSummary() {
-  try {
-    const d = await apiFetch('/api/dashboard/summary');
-    document.getElementById('kpi-critical').textContent = d.critical;
-    document.getElementById('kpi-wo').textContent       = d.work_orders;
-    document.getElementById('kpi-inprog').textContent   = d.in_progress;
-    document.getElementById('kpi-resolved').textContent = d.resolved;
-    document.getElementById('kpi-rhi').textContent      = d.city_rhi;
-
-    const rhi = d.city_rhi;
-    const rhiEl = document.getElementById('kpi-rhi');
-    rhiEl.style.color = rhi < 30 ? 'var(--red)' : rhi < 60 ? 'var(--amber)' : 'var(--green)';
-    document.getElementById('kpi-rhi-label').textContent =
-      rhi < 30 ? 'Poor condition' : rhi < 60 ? 'Moderate condition' : 'Good condition';
-
-    if (d.sla_breaches > 0) {
-      document.getElementById('sla-alert').style.display = 'flex';
-      document.getElementById('sla-count').textContent = d.sla_breaches;
-    }
-
-    document.getElementById('nav-ph-count').textContent   = d.critical;
-    document.getElementById('nav-map-count').textContent  = d.total_potholes;
-    document.getElementById('nav-pipe-count').textContent = d.in_progress;
-  } catch (_) {}
-}
-
-async function loadMapData() {
-  try {
-    const d = await apiFetch('/api/map-data');
-    document.getElementById('map-count-badge').textContent = d.markers.length + ' active';
-
-    // Init dashboard map
-    if (!leafletMap) leafletMap = initMap('live-map');
-    addMarkersToMap(leafletMap, d.markers);
-
-    // Init full map
-    if (!fullLeafletMap) fullLeafletMap = initMap('full-map');
-    addMarkersToMap(fullLeafletMap, d.markers);
-
-    // Fix size
-    setTimeout(() => {
-      leafletMap && leafletMap.invalidateSize();
-      fullLeafletMap && fullLeafletMap.invalidateSize();
-    }, 100);
-  } catch (_) {}
-}
-
-async function loadDashTable() {
-  try {
-    const d = await apiFetch('/api/potholes?limit=5');
-    const tbody = document.getElementById('dash-table');
-    if (!d.potholes.length) {
-      tbody.innerHTML = `<tr><td colspan="7"><div class="empty"><div class="empty-icon">📍</div><div class="empty-title">No potholes yet</div><div class="empty-sub">Run demo seed or start scanning with your phone</div></div></td></tr>`;
-      return;
-    }
-    tbody.innerHTML = d.potholes.map(p => `
-      <tr>
-        <td class="td-mono" style="color:var(--blue)">${p.id}</td>
-        <td>${p.location_name || '—'}</td>
-        <td>${severityBadge(p.severity)}</td>
-        <td>${rhiBar(p.rhi_score)}</td>
-        <td class="td-mono">${p.damage_pct}%</td>
-        <td>${statusBadge(p.status)}</td>
-        <td>
-          <div style="display:flex;gap:4px">
-            <button class="btn btn-secondary btn-sm" onclick="openDetail('${p.id}')">View</button>
-            ${p.status === 'WORK_ORDER' ? `<button class="btn btn-sm" style="background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-bd)" onclick="openAssign('${p.id}')">Assign</button>` : ''}
-          </div>
-        </td>
-      </tr>
-    `).join('');
-  } catch (_) {}
-}
-
-async function loadActivityFeed() {
-  try {
-    const d = await apiFetch('/api/potholes?limit=8');
-    const feed = document.getElementById('activity-feed');
-    if (!d.potholes.length) {
-      feed.innerHTML = `<div class="empty"><div class="empty-icon">🔔</div><div class="empty-sub">No activity yet</div></div>`;
-      return;
-    }
-    const icons = {
-      DETECTED:'🔍', WORK_ORDER:'📋', IN_PROGRESS:'🔧',
-      REPAIR_CLAIMED:'✋', RESOLVED:'✅', WARRANTY_CLAIM:'⚠️'
-    };
-    feed.innerHTML = d.potholes.map(p => `
-      <div style="display:flex;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border);align-items:flex-start;cursor:pointer" onclick="openDetail('${p.id}')">
-        <div style="font-size:18px;flex-shrink:0">${icons[p.status] || '📍'}</div>
-        <div style="flex:1">
-          <div style="font-size:12px;font-weight:600">${p.location_name || p.id}</div>
-          <div style="font-size:11px;color:var(--text3)">${statusBadge(p.status)} ${severityBadge(p.severity)}</div>
-        </div>
-        <div style="font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;flex-shrink:0">${timeAgo(p.detected_at)}</div>
-      </div>
-    `).join('');
-  } catch (_) {}
-}
-
-/* ─────────────────────────────────────
-   LOAD: POTHOLES PAGE
-───────────────────────────────────── */
-async function loadPotholes() {
-  const status   = document.getElementById('filter-status').value;
-  const severity = document.getElementById('filter-severity').value;
-  let url = '/api/potholes?limit=100';
-  if (status)   url += `&status=${status}`;
-  if (severity) url += `&severity=${severity}`;
-
-  const tbody = document.getElementById('ph-table-body');
-  tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:24px"><div class="spinner"></div></td></tr>`;
-
-  try {
-    const d = await apiFetch(url);
-    if (!d.potholes.length) {
-      tbody.innerHTML = `<tr><td colspan="10"><div class="empty"><div class="empty-icon">✅</div><div class="empty-title">No potholes found</div></div></td></tr>`;
-      return;
-    }
-    tbody.innerHTML = d.potholes.map(p => `
-      <tr>
-        <td class="td-mono" style="color:var(--blue);font-size:11px">${p.id}</td>
-        <td style="max-width:150px">${p.location_name || '—'}</td>
-        <td>${severityBadge(p.severity)}</td>
-        <td>${rhiBar(p.rhi_score)}</td>
-        <td class="td-mono">${p.damage_pct}%</td>
-        <td class="td-mono">${Math.round(p.confidence * 100)}%</td>
-        <td class="td-mono" style="text-align:center">${p.detection_count}</td>
-        <td>${statusBadge(p.status)}${p.sla_breached ? ' <span class="badge badge-red" style="font-size:9px">SLA!</span>' : ''}</td>
-        <td class="td-mono" style="font-size:11px">${timeAgo(p.detected_at)}</td>
-        <td>
-          <div style="display:flex;gap:4px;flex-wrap:wrap">
-            <button class="btn btn-secondary btn-sm" onclick="openDetail('${p.id}')">View</button>
-            ${p.status === 'WORK_ORDER'     ? `<button class="btn btn-sm" style="background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-bd)" onclick="openAssign('${p.id}')">Assign</button>` : ''}
-            ${p.status === 'IN_PROGRESS'    ? `<button class="btn btn-sm" style="background:var(--purple-bg);color:var(--purple);border:1px solid #ddd6fe" onclick="markStatus('${p.id}','REPAIR_CLAIMED','Contractor marked repaired')">Mark Repaired</button>` : ''}
-            ${p.status === 'REPAIR_CLAIMED' ? `<button class="btn btn-sm" style="background:var(--green-bg);color:var(--green);border:1px solid var(--green-bd)" onclick="markStatus('${p.id}','RESOLVED','Sensor scan confirmed repair')">Confirm Fixed</button>` : ''}
-          </div>
-        </td>
-      </tr>
-    `).join('');
-  } catch (_) {}
-}
-
-/* ─────────────────────────────────────
-   LOAD: PIPELINE PAGE
-───────────────────────────────────── */
-async function loadPipeline() {
-  try {
-    const d = await apiFetch('/api/potholes?limit=50');
-    const wrap = document.getElementById('pipeline-list');
-
-    if (!d.potholes.length) {
-      wrap.innerHTML = `<div class="empty"><div class="empty-icon">🔄</div><div class="empty-title">No potholes in pipeline</div><div class="empty-sub">Seed demo data or start scanning</div></div>`;
-      return;
-    }
-
-    const stages = ['DETECTED','WORK_ORDER','IN_PROGRESS','REPAIR_CLAIMED','RESOLVED'];
-    const stageLabels = { DETECTED:'Detected', WORK_ORDER:'Work Order', IN_PROGRESS:'In Progress', REPAIR_CLAIMED:'Repair Claimed', RESOLVED:'Resolved' };
-    const stageIcons  = { DETECTED:'🔍', WORK_ORDER:'📋', IN_PROGRESS:'🔧', REPAIR_CLAIMED:'✋', RESOLVED:'✅' };
-
-    wrap.innerHTML = d.potholes.map(p => {
-      const currentIdx = stages.indexOf(p.status);
-
-      const pipeHtml = stages.map((s, i) => {
-        let cls = 'pending';
-        if (i < currentIdx) cls = 'done';
-        if (i === currentIdx) cls = p.sla_breached ? 'breach' : 'active';
-        return `
-          <div class="pipe-step ${cls}">
-            <div class="pipe-circle">${stageIcons[s]}</div>
-            <div class="pipe-label">${stageLabels[s]}</div>
-          </div>`;
-      }).join('');
-
-      const slaHtml = p.sla_deadline ? (() => {
-        const diff = (new Date(p.sla_deadline) - Date.now()) / 3600000;
-        if (p.status === 'RESOLVED') return '';
-        if (diff < 0) return `<span class="badge badge-red">⚠️ SLA Breached ${Math.abs(diff).toFixed(1)}h ago</span>`;
-        if (diff < 2) return `<span class="badge badge-red">⏰ SLA in ${diff.toFixed(1)}h</span>`;
-        return `<span class="badge badge-amber">⏱ SLA: ${diff.toFixed(1)}h remaining</span>`;
-      })() : '';
-
-      return `
-        <div class="card mb-16">
-          <div class="card-header">
-            <div class="card-title">
-              <span class="td-mono" style="color:var(--blue)">${p.id}</span>
-              &nbsp;·&nbsp; ${p.location_name || 'Unknown location'}
+    <!-- MAIN WRAPPER -->
+    <div class="app-container">
+        
+        <!-- HEADER / NAVIGATION -->
+        <header class="navbar">
+            <div class="nav-brand">
+                <div class="logo-icon">
+                    <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M18 2L4 8V16C4 24.5 10 32 18 34C26 32 32 24.5 32 16V8L18 2Z" fill="url(#shield-grad)" stroke="#00D2FF" stroke-width="1.5"/>
+                        <path d="M12 26L16 10H20L24 26" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M18 10V26" stroke="#00F0FF" stroke-width="1.5" stroke-dasharray="2 3"/>
+                        <circle cx="18" cy="18" r="3" fill="#0066FF" stroke="#00F0FF" stroke-width="1.5"/>
+                        <defs>
+                            <linearGradient id="shield-grad" x1="4" y1="2" x2="32" y2="34" gradientUnits="userSpaceOnUse">
+                                <stop stop-color="#0F1B38"/>
+                                <stop offset="1" stop-color="#050B18"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+                <div class="logo-text">
+                    <span class="brand-name">ROADFIX</span>
+                    <span class="brand-sub">AI ROAD INTELLIGENCE PLATFORM</span>
+                </div>
             </div>
-            <div style="display:flex;gap:8px;align-items:center">
-              ${slaHtml}
-              ${severityBadge(p.severity)}
-              <button class="btn btn-secondary btn-sm" onclick="openDetail('${p.id}')">Details</button>
+
+            <nav class="nav-links">
+                <a href="#home" class="nav-item active"><span class="nav-glow"></span>Home</a>
+                <a href="#features" class="nav-item">Features</a>
+                <a href="#how-it-works" class="nav-item">How It Works</a>
+                <a href="#dashboard" class="nav-item">Dashboard</a>
+                <a href="#about" class="nav-item">About Us</a>
+                <a href="#contact" class="nav-item">Contact</a>
+            </nav>
+
+            <div class="nav-actions">
+                <button class="btn-login" id="loginBtn">
+                    <i class="fa-solid fa-lock"></i>
+                    <span>Login</span>
+                </button>
             </div>
-          </div>
-          <div class="card-body">
-            <div class="pipeline" style="margin-bottom:12px">${pipeHtml}</div>
-            <div style="display:flex;gap:16px;font-size:12px;color:var(--text3)">
-              <span>RHI: <strong style="color:var(--text)">${p.rhi_score}</strong></span>
-              <span>Damage: <strong style="color:var(--text)">${p.damage_pct}%</strong></span>
-              <span>Detections: <strong style="color:var(--text)">${p.detection_count}</strong></span>
-              <span>Cost est: <strong style="color:var(--text)">₹${(p.repair_cost_est||0).toLocaleString('en-IN')}</strong></span>
-              ${p.contractor_name ? `<span>Contractor: <strong style="color:var(--text)">${p.contractor_name}</strong></span>` : ''}
+        </header>
+
+        <!-- HERO SECTION -->
+        <section class="hero-section" id="home">
+            <!-- LEFT HERO CONTENT -->
+            <div class="hero-left">
+                <div class="badge-tag">
+                    <span class="badge-pulse"></span>
+                    AI POWERED. DATA DRIVEN. ROADS OF TOMORROW.
+                </div>
+
+                <h1 class="hero-title">
+                    BUILDING SAFER ROADS<br>
+                    WITH <span class="text-gradient">ARTIFICIAL<br>INTELLIGENCE.</span>
+                </h1>
+
+                <p class="hero-description">
+                    ROADFIX uses advanced AI to detect road anomalies, predict failures, assign tasks and help government agencies maintain smarter, safer and more reliable infrastructure.
+                </p>
+
+                <div class="hero-cta-group">
+                    <button class="btn-primary" id="launchPlatformBtn">
+                        <i class="fa-solid fa-rocket"></i>
+                        <span>Launch Platform</span>
+                    </button>
+                    <button class="btn-secondary" id="watchDemoBtn">
+                        <i class="fa-solid fa-play"></i>
+                        <span>Watch Demo</span>
+                    </button>
+                </div>
+
+                <div class="hero-trust-bar">
+                    <span class="trust-item"><i class="fa-solid fa-shield-halved"></i> Secure</span>
+                    <span class="dot">•</span>
+                    <span class="trust-item">Reliable</span>
+                    <span class="dot">•</span>
+                    <span class="trust-item">Government Grade</span>
+                    <span class="dot">•</span>
+                    <span class="trust-item">24/7 Monitoring</span>
+                </div>
             </div>
-          </div>
-        </div>`;
-    }).join('');
-  } catch (_) {}
-}
 
-/* ─────────────────────────────────────
-   LOAD: HISTORY PAGE
-───────────────────────────────────── */
-async function loadHistory() {
-  const tbody = document.getElementById('history-body');
-  tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:24px"><div class="spinner"></div></td></tr>`;
-  try {
-    const d = await apiFetch('/api/scan-history?limit=80');
-    if (!d.events.length) {
-      tbody.innerHTML = `<tr><td colspan="7"><div class="empty"><div class="empty-title">No scans yet</div><div class="empty-sub">Start the Android sensor app or run a demo simulation</div></div></td></tr>`;
-      return;
-    }
-    tbody.innerHTML = d.events.map(e => `
-      <tr>
-        <td class="td-mono" style="font-size:11px">${fmtTime(e.timestamp)}</td>
-        <td class="td-mono" style="color:var(--blue)">${e.vehicle_id}</td>
-        <td class="td-mono">${e.latitude.toFixed(5)}</td>
-        <td class="td-mono">${e.longitude.toFixed(5)}</td>
-        <td class="td-mono" style="color:${e.accel_mag > 2 ? 'var(--red)' : 'var(--text2)'}">${e.accel_mag.toFixed(2)} G</td>
-        <td class="td-mono">${e.speed_kmph || 0} kmph</td>
-        <td>${e.flagged ? '<span class="badge badge-red">⚠️ Flagged</span>' : '<span class="badge badge-green">OK</span>'}</td>
-      </tr>
-    `).join('');
-  } catch (_) {}
-}
+            <!-- RIGHT HERO HUD & OVERLAYS -->
+            <div class="hero-right">
+                <!-- AI DETECTION ACTIVE PANEL -->
+                <div class="hud-panel ai-active-box" id="aiActiveBox">
+                    <div class="panel-header">
+                        <div class="header-title">
+                            <span class="status-indicator"></span>
+                            AI DETECTION ACTIVE
+                        </div>
+                        <button class="panel-close" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                    <div class="panel-body">
+                        <div class="brain-graphic">
+                            <svg viewBox="0 0 100 80" class="brain-svg">
+                                <path d="M50 15 C 30 15, 20 30, 25 45 C 20 55, 30 70, 45 65 C 50 67, 55 67, 60 65 C 75 70, 85 55, 80 45 C 85 30, 75 15, 55 15 Z" fill="none" stroke="url(#brainGlow)" stroke-width="2"/>
+                                <circle cx="40" cy="35" r="3" fill="#00F0FF"><animate attributeName="r" values="2;4;2" dur="2s" repeatCount="indefinite"/></circle>
+                                <circle cx="60" cy="35" r="3" fill="#00F0FF"><animate attributeName="r" values="3;5;3" dur="1.8s" repeatCount="indefinite"/></circle>
+                                <circle cx="50" cy="50" r="3.5" fill="#0066FF"><animate attributeName="r" values="2;4;2" dur="2.2s" repeatCount="indefinite"/></circle>
+                                <path d="M40 35 L50 50 L60 35 M40 35 L60 35" stroke="#00F0FF" stroke-width="1" stroke-dasharray="2 2"/>
+                                <defs>
+                                    <linearGradient id="brainGlow" x1="0" y1="0" x2="1" y2="1">
+                                        <stop offset="0%" stop-color="#00F0FF"/>
+                                        <stop offset="100%" stop-color="#0066FF"/>
+                                    </linearGradient>
+                                </defs>
+                            </svg>
+                        </div>
+                        <div class="confidence-tag">
+                            Confidence <span class="conf-val" id="heroConfVal">98.7%</span>
+                        </div>
+                    </div>
+                </div>
 
-/* ─────────────────────────────────────
-   POTHOLE DETAIL MODAL
-───────────────────────────────────── */
-async function openDetail(id) {
-  document.getElementById('modal-detail').classList.add('open');
-  document.getElementById('detail-title').textContent = id;
-  document.getElementById('detail-body').innerHTML = `<div class="empty"><div class="spinner"></div></div>`;
+                <!-- ROAD ANOMALY SCAN TARGETS OVER HIGHWAY -->
+                <div class="road-anomalies-container">
+                    <!-- POTHOLE ANOMALY -->
+                    <div class="anomaly-box anomaly-pothole" style="left: 48%; top: 58%;">
+                        <div class="target-reticle">
+                            <span class="corner tl"></span>
+                            <span class="corner tr"></span>
+                            <span class="corner bl"></span>
+                            <span class="corner br"></span>
+                            <div class="scan-circle"></div>
+                        </div>
+                        <div class="anomaly-label">POTHOLE</div>
+                    </div>
 
-  try {
-    const d = await apiFetch(`/api/potholes/${id}`);
-    const p = d.pothole;
+                    <!-- CRACK ANOMALY -->
+                    <div class="anomaly-box anomaly-crack" style="left: 68%; top: 46%;">
+                        <div class="target-reticle square">
+                            <span class="corner tl"></span>
+                            <span class="corner tr"></span>
+                            <span class="corner bl"></span>
+                            <span class="corner br"></span>
+                        </div>
+                        <div class="anomaly-label">CRACK</div>
+                    </div>
 
-    const stageIcons = {
-      DETECTED:'🔍', WORK_ORDER_GENERATED:'📋', IN_PROGRESS:'🔧',
-      REPAIR_CLAIMED:'✋', RESOLVED:'✅', WARRANTY_CLAIM:'⚠️',
-      RE_DETECTED:'🔄', WORK_ORDER:'📋'
-    };
+                    <!-- SURFACE WEAR ANOMALY -->
+                    <div class="anomaly-box anomaly-wear" style="left: 80%; top: 54%;">
+                        <div class="target-reticle wide">
+                            <span class="corner tl"></span>
+                            <span class="corner tr"></span>
+                            <span class="corner bl"></span>
+                            <span class="corner br"></span>
+                        </div>
+                        <div class="anomaly-label">SURFACE WEAR</div>
+                    </div>
+                </div>
 
-    const timelineHtml = (d.pipeline || []).map((l, i, arr) => `
-      <div class="tl-item">
-        <div class="tl-left">
-          <div class="tl-dot done">${stageIcons[l.stage] || '●'}</div>
-          ${i < arr.length - 1 ? '<div class="tl-line"></div>' : ''}
-        </div>
-        <div class="tl-content">
-          <div class="tl-title">${l.stage.replace(/_/g,' ')}</div>
-          <div class="tl-detail">${l.note || ''}</div>
-          <div class="tl-time">${fmtTime(l.timestamp)} · by ${l.actor || 'SYSTEM'}</div>
-        </div>
-      </div>`).join('');
+                <!-- FLOATING SIDEBAR STATS PANEL -->
+                <div class="hud-panel sidebar-stats-panel">
+                    <div class="stat-row">
+                        <div class="stat-icon"><i class="fa-solid fa-road"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-label">Roads Scanned</span>
+                            <span class="stat-value" id="statScanned">12,543 km</span>
+                        </div>
+                    </div>
+                    <div class="stat-row">
+                        <div class="stat-icon warning"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-label">Issues Detected</span>
+                            <span class="stat-value" id="statIssues">3,287</span>
+                        </div>
+                    </div>
+                    <div class="stat-row">
+                        <div class="stat-icon success"><i class="fa-solid fa-circle-check"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-label">Repairs Completed</span>
+                            <span class="stat-value" id="statRepairs">1,829</span>
+                        </div>
+                    </div>
+                    <div class="stat-row">
+                        <div class="stat-icon vehicle"><i class="fa-solid fa-car-side"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-label">Active Vehicles</span>
+                            <span class="stat-value" id="statVehicles">41</span>
+                        </div>
+                    </div>
+                    <div class="stat-row">
+                        <div class="stat-icon accuracy"><i class="fa-solid fa-bullseye"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-label">AI Accuracy</span>
+                            <span class="stat-value" id="statAccuracy">98.7%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
 
-    document.getElementById('detail-body').innerHTML = `
-      <div class="grid2" style="gap:10px;margin-bottom:18px">
-        <div style="background:var(--bg);padding:12px;border-radius:8px">
-          <div style="font-size:11px;color:var(--text3);margin-bottom:4px">SEVERITY</div>
-          ${severityBadge(p.severity)}
-        </div>
-        <div style="background:var(--bg);padding:12px;border-radius:8px">
-          <div style="font-size:11px;color:var(--text3);margin-bottom:4px">STATUS</div>
-          ${statusBadge(p.status)}
-        </div>
-        <div style="background:var(--bg);padding:12px;border-radius:8px">
-          <div style="font-size:11px;color:var(--text3);margin-bottom:4px">RHI SCORE</div>
-          <div style="font-family:'DM Mono',monospace;font-size:22px;font-weight:500">${p.rhi_score}<span style="font-size:13px;color:var(--text3)">/100</span></div>
-        </div>
-        <div style="background:var(--bg);padding:12px;border-radius:8px">
-          <div style="font-size:11px;color:var(--text3);margin-bottom:4px">DAMAGE</div>
-          <div style="font-family:'DM Mono',monospace;font-size:22px;font-weight:500">${p.damage_pct}<span style="font-size:13px;color:var(--text3)">%</span></div>
-        </div>
-        <div style="background:var(--bg);padding:12px;border-radius:8px">
-          <div style="font-size:11px;color:var(--text3);margin-bottom:4px">AI CONFIDENCE</div>
-          <div style="font-family:'DM Mono',monospace;font-size:22px;font-weight:500">${Math.round(p.confidence * 100)}<span style="font-size:13px;color:var(--text3)">%</span></div>
-        </div>
-        <div style="background:var(--bg);padding:12px;border-radius:8px">
-          <div style="font-size:11px;color:var(--text3);margin-bottom:4px">REPAIR COST EST.</div>
-          <div style="font-family:'DM Mono',monospace;font-size:22px;font-weight:500">₹${(p.repair_cost_est||0).toLocaleString('en-IN')}</div>
-        </div>
-      </div>
+        <!-- SECOND SECTION: WHY ROADFIX & COMMAND CENTER -->
+        <section class="section-grid" id="features">
+            <!-- LEFT: WHY ROADFIX? (4 GLASS CARDS) -->
+            <div class="col-why">
+                <div class="section-tag">WHY ROADFIX?</div>
+                <h2 class="section-title">Smarter Technology. Stronger Infrastructure.</h2>
 
-      <div style="margin-bottom:16px;padding:12px;background:var(--bg);border-radius:8px;font-size:12px">
-        <div style="display:flex;gap:20px;flex-wrap:wrap">
-          <span><b>Location:</b> ${p.location_name || '—'}</span>
-          <span><b>GPS:</b> ${p.latitude.toFixed(5)}, ${p.longitude.toFixed(5)}</span>
-          <span><b>Detections:</b> ${p.detection_count}</span>
-          ${p.work_order_id ? `<span><b>Work Order:</b> ${p.work_order_id}</span>` : ''}
-          ${p.contractor_name ? `<span><b>Contractor:</b> ${p.contractor_name}</span>` : ''}
-          ${p.sla_deadline ? `<span><b>SLA Deadline:</b> ${fmtTime(p.sla_deadline)}</span>` : ''}
-          ${p.dlp_expiry ? `<span><b>DLP Expiry:</b> ${fmtTime(p.dlp_expiry)}</span>` : ''}
-        </div>
-      </div>
+                <div class="glass-cards-grid">
+                    <!-- CARD 1 -->
+                    <div class="glass-card">
+                        <div class="card-icon-box">
+                            <i class="fa-solid fa-brain"></i>
+                        </div>
+                        <h3 class="card-h3">AI Detection</h3>
+                        <p class="card-p">Detect potholes, cracks and surface issues with high accuracy.</p>
+                    </div>
 
-      <div style="font-size:13px;font-weight:600;margin-bottom:10px">📋 Pipeline History</div>
-      <div class="timeline">${timelineHtml || '<div style="color:var(--text3);font-size:12px">No pipeline log yet</div>'}</div>
-    `;
-  } catch (_) {}
-}
+                    <!-- CARD 2 -->
+                    <div class="glass-card">
+                        <div class="card-icon-box">
+                            <i class="fa-solid fa-video"></i>
+                        </div>
+                        <h3 class="card-h3">Live Monitoring</h3>
+                        <p class="card-p">Real-time monitoring using dashcams and smart devices.</p>
+                    </div>
 
-/* ─────────────────────────────────────
-   ASSIGN CONTRACTOR MODAL
-───────────────────────────────────── */
-function openAssign(id) {
-  document.getElementById('assign-ph-id').value = id;
-  document.getElementById('assign-name').value  = '';
-  document.getElementById('assign-phone').value = '';
-  document.getElementById('assign-note').value  = '';
-  document.getElementById('modal-assign').classList.add('open');
-}
+                    <!-- CARD 3 -->
+                    <div class="glass-card">
+                        <div class="card-icon-box">
+                            <i class="fa-solid fa-users-gear"></i>
+                        </div>
+                        <h3 class="card-h3">Smart Assignment</h3>
+                        <p class="card-p">Automatically assign work to the right contractors.</p>
+                    </div>
 
-async function submitAssign() {
-  const id    = document.getElementById('assign-ph-id').value;
-  const name  = document.getElementById('assign-name').value.trim();
-  const phone = document.getElementById('assign-phone').value.trim();
-  const note  = document.getElementById('assign-note').value.trim();
-  if (!name) { showToast('Enter contractor name', 'error'); return; }
-  try {
-    await apiFetch(`/api/potholes/${id}/status`, {
-      method: 'PATCH',
-      body: JSON.stringify({ status: 'IN_PROGRESS', contractor_name: name, contractor_phone: phone, note: note || `Assigned to ${name}`, actor: 'ADMIN' })
-    });
-    closeModal('modal-assign');
-    showToast(`Contractor assigned to ${id}`, 'success');
-    loadPotholes();
-    loadPipeline();
-  } catch (_) {}
-}
+                    <!-- CARD 4 -->
+                    <div class="glass-card">
+                        <div class="card-icon-box">
+                            <i class="fa-solid fa-chart-column"></i>
+                        </div>
+                        <h3 class="card-h3">Data Analytics</h3>
+                        <p class="card-p">Powerful dashboards and insights for better decision making.</p>
+                    </div>
+                </div>
+            </div>
 
-/* ─────────────────────────────────────
-   STATUS UPDATE
-───────────────────────────────────── */
-async function markStatus(id, status, note) {
-  try {
-    await apiFetch(`/api/potholes/${id}/status`, {
-      method: 'PATCH',
-      body: JSON.stringify({ status, note, actor: 'ADMIN' })
-    });
-    showToast(`${id} → ${status}`, 'success');
-    loadPotholes();
-    loadPipeline();
-    loadSummary();
-  } catch (_) {}
-}
+            <!-- RIGHT: COMMAND CENTER & DASHBOARD -->
+            <div class="col-command" id="dashboard">
+                <div class="section-tag">COMMAND CENTER</div>
+                <h2 class="section-title">Real-time Road Health Overview</h2>
 
-/* ─────────────────────────────────────
-   DEMO ACTIONS
-───────────────────────────────────── */
-async function seedDemo() {
-  document.getElementById('demo-result').textContent = 'Loading demo data...';
-  try {
-    const d = await apiFetch('/api/demo/seed', { method: 'POST' });
-    document.getElementById('demo-result').textContent = JSON.stringify(d, null, 2);
-    showToast(`${d.seeded} demo potholes loaded!`, 'success');
-    loadAll();
-  } catch (_) {}
-}
+                <div class="dashboard-container glass-panel-large">
+                    <!-- DASHBOARD METRICS 2x3 GRID -->
+                    <div class="dash-metrics-grid">
+                        <!-- METRIC 1 -->
+                        <div class="dash-metric-card">
+                            <span class="m-label">Road Health Index</span>
+                            <div class="m-val-group">
+                                <span class="m-val text-green">97%</span>
+                            </div>
+                            <div class="sparkline-box">
+                                <svg viewBox="0 0 100 24" class="sparkline">
+                                    <path d="M0 18 Q20 12, 40 16 T80 6 T100 4" fill="none" stroke="#10B981" stroke-width="2"/>
+                                </svg>
+                            </div>
+                        </div>
 
-async function simulateDrive() {
-  const vid = document.getElementById('sim-vehicle').value || 'TN-33-DEMO';
-  document.getElementById('demo-result').textContent = 'Simulating drive...';
-  try {
-    const d = await apiFetch(`/api/demo/simulate-drive?vehicle_id=${encodeURIComponent(vid)}`);
-    document.getElementById('demo-result').textContent = JSON.stringify(d, null, 2);
-    const flagged = d.results.filter(r => r.flagged).length;
-    showToast(`Drive complete — ${flagged} spikes detected`, 'success');
-    loadAll();
-  } catch (_) {}
-}
+                        <!-- METRIC 2 -->
+                        <div class="dash-metric-card">
+                            <span class="m-label">Critical Roads</span>
+                            <div class="m-val-group">
+                                <span class="m-val text-red">08</span>
+                            </div>
+                            <div class="sparkline-box">
+                                <svg viewBox="0 0 100 24" class="sparkline">
+                                    <path d="M0 8 Q25 18, 50 10 T80 20 T100 14" fill="none" stroke="#EF4444" stroke-width="2"/>
+                                </svg>
+                            </div>
+                        </div>
 
-async function manualSensor() {
-  const body = {
-    vehicle_id: document.getElementById('manual-vid').value,
-    latitude:   parseFloat(document.getElementById('manual-lat').value),
-    longitude:  parseFloat(document.getElementById('manual-lon').value),
-    accel_x: 0.1, accel_y: 0.2,
-    accel_z:    parseFloat(document.getElementById('manual-az').value),
-    speed_kmph: parseFloat(document.getElementById('manual-speed').value),
-    timestamp:  new Date().toISOString()
-  };
-  document.getElementById('demo-result').textContent = 'Sending...';
-  try {
-    const d = await apiFetch('/api/sensor-data', { method: 'POST', body: JSON.stringify(body) });
-    document.getElementById('demo-result').textContent = JSON.stringify(d, null, 2);
-    const r = d.data;
-    if (r.flagged) {
-      showToast(r.work_order_generated ? '🚨 Work order auto-generated!' : `Pothole flagged — ${r.detection_count || 1} detection(s)`, r.work_order_generated ? 'success' : 'info');
-    } else {
-      showToast('Normal road — no pothole detected', 'info');
-    }
-    loadAll();
-  } catch (_) {}
-}
+                        <!-- METRIC 3 -->
+                        <div class="dash-metric-card">
+                            <span class="m-label">Repairs Today</span>
+                            <div class="m-val-group">
+                                <span class="m-val text-blue">24</span>
+                            </div>
+                            <div class="sparkline-box">
+                                <svg viewBox="0 0 100 24" class="sparkline">
+                                    <path d="M0 20 Q30 15, 50 8 T80 12 T100 2" fill="none" stroke="#3B82F6" stroke-width="2"/>
+                                </svg>
+                            </div>
+                        </div>
 
-/* ─────────────────────────────────────
-   SETTINGS
-───────────────────────────────────── */
-function saveApiUrl() {
-  const val = document.getElementById('settings-api-url').value.trim().replace(/\/$/, '');
-  API = val;
-  localStorage.setItem('roadfix_api', val);
-  document.getElementById('api-url-display').textContent = val;
-  testConnection();
-}
+                        <!-- METRIC 4 -->
+                        <div class="dash-metric-card">
+                            <span class="m-label">AI Accuracy</span>
+                            <div class="m-val-group">
+                                <span class="m-val text-cyan">98.7%</span>
+                            </div>
+                            <div class="sparkline-box">
+                                <svg viewBox="0 0 100 24" class="sparkline">
+                                    <path d="M0 16 Q30 18, 50 10 T80 6 T100 4" fill="none" stroke="#00F0FF" stroke-width="2"/>
+                                </svg>
+                            </div>
+                        </div>
 
-async function testConnection() {
-  const el = document.getElementById('conn-status');
-  el.innerHTML = '<span style="color:var(--text3)">Testing...</span>';
-  try {
-    const d = await apiFetch('/health');
-    el.innerHTML = `<span style="color:var(--green)">✓ Connected — ${d.potholes_in_db} potholes in database</span>`;
-    showToast('Backend connected!', 'success');
-  } catch (_) {
-    el.innerHTML = `<span style="color:var(--red)">✕ Cannot connect. Make sure backend is running at ${API}</span>`;
-  }
-}
+                        <!-- METRIC 5 -->
+                        <div class="dash-metric-card">
+                            <span class="m-label">Active Vehicles</span>
+                            <div class="m-val-group">
+                                <span class="m-val text-purple">41</span>
+                            </div>
+                            <div class="sparkline-box">
+                                <svg viewBox="0 0 100 24" class="sparkline">
+                                    <path d="M0 14 Q25 6, 50 18 T80 10 T100 12" fill="none" stroke="#8B5CF6" stroke-width="2"/>
+                                </svg>
+                            </div>
+                        </div>
 
-/* ─────────────────────────────────────
-   INIT
-───────────────────────────────────── */
-window.addEventListener('load', () => {
-  // Init dashboard map immediately
-  setTimeout(() => {
-    leafletMap = initMap('live-map');
-    loadAll();
-  }, 100);
+                        <!-- METRIC 6 -->
+                        <div class="dash-metric-card">
+                            <span class="m-label">Total Roads</span>
+                            <div class="m-val-group">
+                                <span class="m-val text-amber">1,245 <small class="unit">km</small></span>
+                            </div>
+                            <div class="sparkline-box">
+                                <svg viewBox="0 0 100 24" class="sparkline">
+                                    <path d="M0 22 Q30 16, 50 14 T80 18 T100 8" fill="none" stroke="#F59E0B" stroke-width="2"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
 
-  // Auto-refresh every 30 seconds
-  setInterval(() => {
-    const activePage = document.querySelector('.page.active');
-    if (activePage && activePage.id === 'page-dashboard') loadAll();
-  }, 30000);
-});
-/* ══════════════════════════════════════════
-   AI COPILOT LOGIC
-══════════════════════════════════════════ */
-function toggleCopilot() {
-  const panel = document.getElementById('copilot-panel');
-  const isOpen = panel.classList.contains('open');
-  panel.classList.toggle('open');
-  if (!isOpen) {
-    document.getElementById('copilot-input').focus();
-  }
-}
+                    <!-- TAMIL NADU ROAD HEALTH MAP -->
+                    <div class="dash-map-container">
+                        <div class="map-header">
+                            <span class="map-title-tag">TAMIL NADU ROAD HEALTH MAP</span>
+                        </div>
 
-async function sendCopilotQuery() {
-  const input = document.getElementById('copilot-input');
-  const btn = document.getElementById('copilot-send');
-  const messagesWrap = document.getElementById('copilot-messages');
-  const loader = document.getElementById('copilot-loading');
-  const query = input.value.trim();
+                        <div class="tn-map-wrapper">
+                            <!-- TAMIL NADU STATE VECTOR / NODE NETWORK -->
+                            <svg viewBox="0 0 400 420" class="tn-map-svg">
+                                <defs>
+                                    <linearGradient id="mapFill" x1="0" y1="0" x2="1" y2="1">
+                                        <stop offset="0%" stop-color="rgba(0, 102, 255, 0.12)"/>
+                                        <stop offset="100%" stop-color="rgba(5, 15, 38, 0.6)"/>
+                                    </linearGradient>
+                                    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                                        <feGaussianBlur stdDeviation="3" result="blur" />
+                                        <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                                    </filter>
+                                </defs>
 
-  if (!query) return;
+                                <!-- TAMIL NADU MAP OUTLINE -->
+                                <path d="M 120 40 
+                                         C 150 30, 230 40, 260 70 
+                                         C 290 90, 340 120, 360 160 
+                                         C 370 190, 350 230, 310 270 
+                                         C 280 300, 240 360, 200 390 
+                                         C 170 410, 150 400, 130 360 
+                                         C 120 330, 100 310, 80 290 
+                                         C 60 270, 40 230, 45 190 
+                                         C 50 150, 70 110, 95 75 Z" 
+                                      fill="url(#mapFill)" stroke="#00D2FF" stroke-width="1.5" stroke-dasharray="4 2" class="tn-boundary"/>
 
-  // 1. Add User Message to UI
-  appendCopilotMessage('user', query);
-  input.value = '';
+                                <!-- CONNECTED ROAD NETWORK LINES -->
+                                <g class="network-lines" stroke="rgba(0, 240, 255, 0.25)" stroke-width="1">
+                                    <!-- Chennai to Vellore/Salem -->
+                                    <line x1="330" y1="100" x2="250" y2="130"/>
+                                    <line x1="250" y1="130" x2="190" y2="180"/>
+                                    <!-- Chennai to Puducherry/Trichy -->
+                                    <line x1="330" y1="100" x2="290" y2="180"/>
+                                    <line x1="290" y1="180" x2="230" y2="250"/>
+                                    <!-- Salem to Coimbatore -->
+                                    <line x1="190" y1="180" x2="120" y2="210"/>
+                                    <!-- Trichy to Madurai -->
+                                    <line x1="230" y1="250" x2="180" y2="300"/>
+                                    <!-- Madurai to Tirunelveli/Kanyakumari -->
+                                    <line x1="180" y1="300" x2="150" y2="360"/>
+                                    <line x1="150" y1="360" x2="135" y2="390"/>
+                                    <!-- Cross networks -->
+                                    <line x1="120" y1="210" x2="180" y2="300"/>
+                                    <line x1="190" y1="180" x2="230" y2="250"/>
+                                </g>
 
-  // 2. Prepare UI State
-  loader.style.display = 'flex';
-  btn.disabled = true;
-  messagesWrap.scrollTop = messagesWrap.scrollHeight;
+                                <!-- NODES / ROAD STATUS POINTS -->
+                                <!-- CHENNAI (Excellent - Green) -->
+                                <g class="map-node node-green" transform="translate(330, 100)">
+                                    <circle r="8" fill="rgba(16, 185, 129, 0.2)"><animate attributeName="r" values="4;12;4" dur="2s" repeatCount="indefinite"/></circle>
+                                    <circle r="4" fill="#10B981"/>
+                                </g>
+                                <!-- VELLORE (Good - Blue) -->
+                                <g class="map-node node-blue" transform="translate(250, 130)">
+                                    <circle r="4" fill="#3B82F6"/>
+                                </g>
+                                <!-- SALEM (Excellent - Green) -->
+                                <g class="map-node node-green" transform="translate(190, 180)">
+                                    <circle r="4" fill="#10B981"/>
+                                </g>
+                                <!-- COIMBATORE (Good - Blue) -->
+                                <g class="map-node node-blue" transform="translate(120, 210)">
+                                    <circle r="4" fill="#3B82F6"/>
+                                </g>
+                                <!-- TRICHY (Fair - Yellow) -->
+                                <g class="map-node node-yellow" transform="translate(230, 250)">
+                                    <circle r="7" fill="rgba(245, 158, 11, 0.25)"><animate attributeName="r" values="3;9;3" dur="1.5s" repeatCount="indefinite"/></circle>
+                                    <circle r="4.5" fill="#F59E0B"/>
+                                </g>
+                                <!-- MADURAI (Critical/Poor - Red) -->
+                                <g class="map-node node-red" transform="translate(180, 300)">
+                                    <circle r="9" fill="rgba(239, 68, 68, 0.3)"><animate attributeName="r" values="4;14;4" dur="1.2s" repeatCount="indefinite"/></circle>
+                                    <circle r="5" fill="#EF4444"/>
+                                </g>
+                                <!-- TIRUNELVELI (Good - Blue) -->
+                                <g class="map-node node-blue" transform="translate(150, 360)">
+                                    <circle r="4" fill="#3B82F6"/>
+                                </g>
+                                <!-- ERODE (Green) -->
+                                <g class="map-node node-green" transform="translate(160, 195)">
+                                    <circle r="3.5" fill="#10B981"/>
+                                </g>
+                                <!-- THANJAVUR (Fair - Yellow) -->
+                                <g class="map-node node-yellow" transform="translate(270, 260)">
+                                    <circle r="4" fill="#F59E0B"/>
+                                </g>
+                            </svg>
 
-  try {
-    // 3. Use your existing apiFetch helper
-    const res = await apiFetch('/api/copilot/query', {
-      method: 'POST',
-      body: JSON.stringify({ query: query })
-    });
+                            <!-- MAP LEGEND -->
+                            <div class="map-legend">
+                                <div class="legend-item"><span class="leg-dot green"></span> Excellent</div>
+                                <div class="legend-item"><span class="leg-dot blue"></span> Good</div>
+                                <div class="legend-item"><span class="leg-dot yellow"></span> Fair</div>
+                                <div class="legend-item"><span class="leg-dot red"></span> Poor</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
 
-    // 4. Handle AI Response
-    if (res.success) {
-      appendCopilotMessage('ai', res.message, res.data);
-    } else {
-      appendCopilotMessage('ai', 'Sorry, I encountered an error: ' + (res.message || 'Unknown error'));
-    }
-  } catch (err) {
-    appendCopilotMessage('ai', 'Failed to reach the AI service. Please ensure the backend is running.');
-  } finally {
-    // 5. Restore UI State
-    loader.style.display = 'none';
-    btn.disabled = false;
-    messagesWrap.scrollTop = messagesWrap.scrollHeight;
-  }
-}
+        <!-- THIRD & FOURTH SECTION ROW (WORKFLOW & IMPACT STATS) -->
+        <section class="section-grid section-lower" id="how-it-works">
+            <!-- THIRD SECTION: HOW ROADFIX WORKS -->
+            <div class="col-workflow">
+                <div class="section-tag">HOW ROADFIX WORKS</div>
+                
+                <div class="workflow-steps-container">
+                    <!-- STEP 1 -->
+                    <div class="step-card">
+                        <div class="step-icon-wrapper">
+                            <i class="fa-solid fa-video"></i>
+                        </div>
+                        <div class="step-meta">
+                            <span class="step-num">1. Capture</span>
+                            <p class="step-desc">Dashcam captures road video</p>
+                        </div>
+                    </div>
 
-function appendCopilotMessage(sender, text, data = null) {
-  const wrap = document.getElementById('copilot-messages');
-  const msgDiv = document.createElement('div');
-  msgDiv.className = `copilot-msg ${sender}`;
-  msgDiv.innerText = text;
+                    <div class="step-arrow"><i class="fa-solid fa-arrow-right"></i></div>
 
-  // If data exists, render it as a table inside the chat
-  if (data && Array.isArray(data) && data.length > 0) {
-    const tableContainer = document.createElement('div');
-    tableContainer.className = 'copilot-table-result';
-    
-    let tableHtml = '<table style="font-size:11px; width:100%;"><thead><tr>';
-    // Get headers from first object keys
-    const headers = Object.keys(data[0]);
-    headers.forEach(h => {
-      tableHtml += `<th style="padding:4px; background:var(--bg); border-bottom:1px solid var(--border); text-align:left;">${h.toUpperCase()}</th>`;
-    });
-    tableHtml += '</tr></thead><tbody>';
+                    <!-- STEP 2 -->
+                    <div class="step-card">
+                        <div class="step-icon-wrapper">
+                            <i class="fa-solid fa-brain"></i>
+                        </div>
+                        <div class="step-meta">
+                            <span class="step-num">2. AI Detection</span>
+                            <p class="step-desc">AI detects issues in real-time</p>
+                        </div>
+                    </div>
 
-    // Build rows
-    data.forEach(row => {
-      tableHtml += '<tr>';
-      headers.forEach(h => {
-        tableHtml += `<td style="padding:4px; border-bottom:1px solid var(--border);">${row[h]}</td>`;
-      });
-      tableHtml += '</tr>';
-    });
+                    <div class="step-arrow"><i class="fa-solid fa-arrow-right"></i></div>
 
-    tableHtml += '</tbody></table>';
-    tableContainer.innerHTML = tableHtml;
-    msgDiv.appendChild(tableContainer);
-  }
+                    <!-- STEP 3 -->
+                    <div class="step-card">
+                        <div class="step-icon-wrapper">
+                            <i class="fa-solid fa-shield-check"></i>
+                        </div>
+                        <div class="step-meta">
+                            <span class="step-num">3. Verification</span>
+                            <p class="step-desc">Issues are verified by officials</p>
+                        </div>
+                    </div>
 
-  wrap.appendChild(msgDiv);
-  wrap.scrollTop = wrap.scrollHeight;
-}
-</script>
-<!-- AI COPILOT INTERFACE -->
-<button id="copilot-trigger" class="copilot-btn" onclick="toggleCopilot()">
-  <span>🤖</span> AI Copilot
-</button>
+                    <div class="step-arrow"><i class="fa-solid fa-arrow-right"></i></div>
 
-<div id="copilot-panel" class="copilot-panel">
-  <div class="copilot-header">
-    <div class="modal-title">ROADFIX AI Copilot</div>
-    <button class="modal-close" onclick="toggleCopilot()">✕</button>
-  </div>
-  
-  <div id="copilot-messages" class="copilot-body">
-    <div class="copilot-msg ai">
-      Hello! I'm your ROADFIX Assistant. How can I help you with road health data today?
+                    <!-- STEP 4 -->
+                    <div class="step-card">
+                        <div class="step-icon-wrapper">
+                            <i class="fa-solid fa-user-check"></i>
+                        </div>
+                        <div class="step-meta">
+                            <span class="step-num">4. Assignment</span>
+                            <p class="step-desc">Work assigned to contractors</p>
+                        </div>
+                    </div>
+
+                    <div class="step-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+
+                    <!-- STEP 5 -->
+                    <div class="step-card">
+                        <div class="step-icon-wrapper">
+                            <i class="fa-solid fa-wrench"></i>
+                        </div>
+                        <div class="step-meta">
+                            <span class="step-num">5. Repair</span>
+                            <p class="step-desc">Contractor repairs the issue</p>
+                        </div>
+                    </div>
+
+                    <div class="step-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+
+                    <!-- STEP 6 -->
+                    <div class="step-card">
+                        <div class="step-icon-wrapper">
+                            <i class="fa-solid fa-chart-line"></i>
+                        </div>
+                        <div class="step-meta">
+                            <span class="step-num">6. Updated</span>
+                            <p class="step-desc">Road health data is updated</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FOURTH SECTION: OUR IMPACT -->
+            <div class="col-impact" id="impact">
+                <div class="section-tag">OUR IMPACT</div>
+
+                <div class="impact-cards-grid">
+                    <!-- IMPACT CARD 1 -->
+                    <div class="impact-card">
+                        <div class="imp-icon-circle blue">
+                            <i class="fa-solid fa-bullseye"></i>
+                        </div>
+                        <div class="imp-stat">97%</div>
+                        <div class="imp-label">AI Detection Accuracy</div>
+                    </div>
+
+                    <!-- IMPACT CARD 2 -->
+                    <div class="impact-card">
+                        <div class="imp-icon-circle green">
+                            <i class="fa-solid fa-bolt"></i>
+                        </div>
+                        <div class="imp-stat">65%</div>
+                        <div class="imp-label">Faster Repair Response</div>
+                    </div>
+
+                    <!-- IMPACT CARD 3 -->
+                    <div class="impact-card">
+                        <div class="imp-icon-circle amber">
+                            <i class="fa-regular fa-clock"></i>
+                        </div>
+                        <div class="imp-stat">24/7</div>
+                        <div class="imp-label">Continuous Monitoring</div>
+                    </div>
+
+                    <!-- IMPACT CARD 4 -->
+                    <div class="impact-card">
+                        <div class="imp-icon-circle purple">
+                            <i class="fa-solid fa-shield-check"></i>
+                        </div>
+                        <div class="imp-stat">100+</div>
+                        <div class="imp-label">Roads Analysed Daily</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FOOTER -->
+        <footer class="footer" id="contact">
+            <div class="footer-grid">
+                <!-- BRAND INFO -->
+                <div class="footer-col brand-col">
+                    <div class="footer-logo">
+                        <div class="logo-icon sm">
+                            <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M18 2L4 8V16C4 24.5 10 32 18 34C26 32 32 24.5 32 16V8L18 2Z" fill="#0066FF" stroke="#00D2FF" stroke-width="1.5"/>
+                                <path d="M12 26L16 10H20L24 26" stroke="#FFFFFF" stroke-width="2"/>
+                            </svg>
+                        </div>
+                        <div class="logo-text">
+                            <span class="brand-name">ROADFIX</span>
+                            <span class="brand-sub">AI Road Health Monitoring System</span>
+                        </div>
+                    </div>
+                    <p class="footer-slogan">Building smarter roads for a stronger tomorrow.</p>
+                </div>
+
+                <!-- QUICK LINKS -->
+                <div class="footer-col">
+                    <h4 class="f-heading">Quick Links</h4>
+                    <ul class="f-links">
+                        <li><a href="#home">Home</a></li>
+                        <li><a href="#features">Features</a></li>
+                        <li><a href="#how-it-works">How It Works</a></li>
+                        <li><a href="#dashboard">Dashboard</a></li>
+                    </ul>
+                </div>
+
+                <!-- RESOURCES -->
+                <div class="footer-col">
+                    <h4 class="f-heading">Resources</h4>
+                    <ul class="f-links">
+                        <li><a href="#doc">Documentation</a></li>
+                        <li><a href="#faq">FAQ</a></li>
+                        <li><a href="#support">Support</a></li>
+                        <li><a href="#privacy">Privacy Policy</a></li>
+                    </ul>
+                </div>
+
+                <!-- CONTACT US -->
+                <div class="footer-col">
+                    <h4 class="f-heading">Contact Us</h4>
+                    <ul class="f-contact">
+                        <li><i class="fa-solid fa-phone"></i> +91 98765 43210</li>
+                        <li><i class="fa-solid fa-envelope"></i> info@roadfix.ai</li>
+                        <li><i class="fa-solid fa-location-dot"></i> Chennai, Tamil Nadu, India</li>
+                    </ul>
+                </div>
+
+                <!-- FOLLOW US -->
+                <div class="footer-col">
+                    <h4 class="f-heading">Follow Us</h4>
+                    <div class="social-icons">
+                        <a href="#" class="social-btn" aria-label="GitHub"><i class="fa-brands fa-github"></i></a>
+                        <a href="#" class="social-btn" aria-label="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
+                        <a href="#" class="social-btn" aria-label="Twitter"><i class="fa-brands fa-twitter"></i></a>
+                        <a href="#" class="social-btn" aria-label="YouTube"><i class="fa-brands fa-youtube"></i></a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <p>&copy; 2026 ROADFIX. All rights reserved. Government of Tamil Nadu - Highways Department.</p>
+            </div>
+        </footer>
+
     </div>
-  </div>
 
-  <div id="copilot-loading" class="copilot-loader" style="display:none">
-    <div class="spinner"></div> <span>AI is thinking...</span>
-  </div>
-
-  <div class="copilot-footer">
-    <div class="copilot-input-wrap">
-      <input type="text" id="copilot-input" placeholder="Ask about road health, SLAs, or contractors..." onkeydown="if(event.key==='Enter') sendCopilotQuery()">
-      <button id="copilot-send" class="btn btn-primary btn-sm" onclick="sendCopilotQuery()">Send</button>
-    </div>
-  </div>
-</div>
+    <script src="landing.js"></script>
 </body>
 </html>
